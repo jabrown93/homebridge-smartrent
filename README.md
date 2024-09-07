@@ -19,6 +19,8 @@ Unofficial [Homebridge](https://homebridge.io) plugin for [SmartRent](https://sm
 
 </span>
 
+# Tweaking for my personal use case (thermostat problems), not meant for public use. Use at your own risk
+
 ## 🔄 Supported Devices
 
 Homebridge SmartRent currently supports these devices through a SmartRent hub:
