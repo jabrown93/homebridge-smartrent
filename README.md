@@ -1,19 +1,19 @@
 <span align="center">
 
 <h1>
-  <a href="https://github.com/bhavishyachandra/homebridge-smartrent">
+  <a href="https://github.com/jabrown93/homebridge-smartrent">
     <img align="center" src="homebridge-ui/public/banner.png" />
   </a>
   <br />
   Homebridge SmartRent
 </h1>
 
-[![npm version](https://badgen.net/npm/v/@bhavishyachandra/homebridge-smartrent?color=purple&icon=npm&label)](https://www.npmjs.com/package/@bhavishyachandra/homebridge-smartrent)
-[![npm downloads](https://badgen.net/github/last-commit/bhavishyachandra/homebridge-smartrent?color=cyan&icon=github)](https://github.com/bhavishyachandra/homebridge-smartrent)
-[![npm version](https://badgen.net/github/stars/bhavishyachandra/homebridge-smartrent?color=cyan&icon=github)](https://github.com/bhavishyachandra/homebridge-smartrent)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/bhavishyachandra/homebridge-smartrent.svg)](https://github.com/bhavishyachandra/homebridge-smartrent/pulls)
-[![GitHub issues](https://img.shields.io/github/issues/bhavishyachandra/homebridge-smartrent.svg)](https://github.com/bhavishyachandra/homebridge-smartrent/issues)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbhavishyachandra%2Fhomebridge-smartrent.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbhavishyachandra%2Fhomebridge-smartrent?ref=badge_shield)
+[![npm version](https://badgen.net/npm/v/@jabrown93/homebridge-smartrent?color=purple&icon=npm&label)](https://www.npmjs.com/package/@jabrown93/homebridge-smartrent)
+[![npm downloads](https://badgen.net/github/last-commit/jabrown93/homebridge-smartrent?color=cyan&icon=github)](https://github.com/jabrown93/homebridge-smartrent)
+[![npm version](https://badgen.net/github/stars/jabrown93/homebridge-smartrent?color=cyan&icon=github)](https://github.com/jabrown93/homebridge-smartrent)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/jabrown93/homebridge-smartrent.svg)](https://github.com/jabrown93/homebridge-smartrent/pulls)
+[![GitHub issues](https://img.shields.io/github/issues/jabrown93/homebridge-smartrent.svg)](https://github.com/jabrown93/homebridge-smartrent/issues)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjabrown93%2Fhomebridge-smartrent.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjabrown93%2Fhomebridge-smartrent?ref=badge_shield)
 
 Unofficial [Homebridge](https://homebridge.io) plugin for [SmartRent](https://smartrent.com), allowing you to control your SmartRent devices with [Apple Home](https://www.apple.com/ios/home/).
 
@@ -50,7 +50,7 @@ Homebridge SmartRent currently supports these devices through a SmartRent hub:
 1. Install the plugin using NPM:
 
    ```sh
-   npm i -g @bhavishyachandra/homebridge-smartrent
+   npm i -g @jabrown93/homebridge-smartrent
    ```
 
 2. Configure the SmartRent platform in `~/.homebridge/config.json` as shown in [`config.example.json`](./config.example.json).
@@ -138,7 +138,7 @@ This will launch an instance of Homebridge in debug mode which will restart ever
 
 [GNU GENERAL PUBLIC LICENSE, Version 3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbhavishyachandra%2Fhomebridge-smartrent.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbhavishyachandra%2Fhomebridge-smartrent?ref=badge_large)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fjabrown93%2Fhomebridge-smartrent.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fjabrown93%2Fhomebridge-smartrent?ref=badge_large)
 
 ## Disclaimer
 

@@ -82,9 +82,10 @@ export class SmartRentPlatform implements DynamicPlatformPlugin {
       case 'switch_binary':
         Accessory = SwitchAccessory;
         break;
-      case 'thermostat':
-        Accessory = ThermostatAccessory;
-        break;
+      // disabling theromstat intentionally, I only want the lock for my homebridge and this my lazy way of doing it
+      // case 'thermostat':
+      //   Accessory = ThermostatAccessory;
+      //   break;
       case 'switch_multilevel':
         Accessory = SwitchMultilevelAccessory;
         break;

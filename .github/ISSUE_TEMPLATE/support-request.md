@@ -3,7 +3,7 @@ name: Support Request
 about: Need help?
 title: ''
 labels: question
-assignees: bhavishyachandra
+assignees: jabrown93
 ---
 
 <!-- You must use the issue template below when submitting a support request -->
