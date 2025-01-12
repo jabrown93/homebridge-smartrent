@@ -213,14 +213,14 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
   }
 
   private _handleWsError(error: WebSocket.ErrorEvent) {
-    this.log.error(`WebSocket error: ${JSON.stringify(error)}`);
+    this.log.error(`WebSocket error: ${error.message}`, error);
   }
 
   private _handleWsClose(event: WebSocket.CloseEvent) {
     this.log.debug(
       `WebSocket connection closed: Code: ${event.code}, Reason: ${
         event.reason
-      }, Event: ${JSON.stringify(event)}`,
+      }, Event: ${event}`,
       event
     );
     this.wsClient = this._initializeWsClient();
