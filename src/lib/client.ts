@@ -36,8 +36,6 @@ export class SmartRentApiClient {
   private readonly apiClient: AxiosInstance;
   protected readonly log: Logger | Console;
 
-  // wsClient: Promise<WebSocket>;
-
   constructor(readonly platform: SmartRentPlatform) {
     this.authClient = new SmartRentAuthClient(
       platform.api.user.storagePath(),
@@ -184,7 +182,7 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
    */
   private async _initializeWsClient() {
     this.log.debug('WebSocket connection opening');
-    const token = String(await this.getWebSocketToken());
+    const token = String(await this.getAccessToken());
     const wsClient = new WebSocket(
       WS_API_URL +
         '?' +
@@ -214,6 +212,9 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
 
   private _handleWsError(error: WebSocket.ErrorEvent) {
     this.log.error(`WebSocket error: ${error.message}`);
+    this.wsClient
+      .then(client => client.close())
+      .then(() => this._initializeWsClient);
   }
 
   private _handleWsClose(event: WebSocket.CloseEvent) {
