@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.18-beta.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.17...v2.0.18-beta.1) (2025-01-27)
+
+### Bug Fixes
+
+* use access token for websockets and better error handling ([368b2dc](https://github.com/jabrown93/homebridge-smartrent/commit/368b2dc0b2df8cddbfa8b0699c51af3c377ce504))
+* use access token for websockets and better error handling ([898cef1](https://github.com/jabrown93/homebridge-smartrent/commit/898cef181a5f0352a455aafddd7e0d8c9eae4192))
+
 ## [2.0.17](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.16...v2.0.17) (2025-01-12)
 
 ### Bug Fixes
