@@ -28,33 +28,34 @@ export class LeakSensorAccessory {
       hubId: this.accessory.context.device.room.hub_id.toString(),
       deviceId: this.accessory.context.device.id.toString(),
       leak: {
-        current: this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED,
+        current:
+          this.platform.api.hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED,
       },
     };
 
     // set accessory information
     this.accessory
-      .getService(this.platform.Service.AccessoryInformation)!
+      .getService(this.platform.api.hap.Service.AccessoryInformation)!
       .setCharacteristic(
-        this.platform.Characteristic.SerialNumber,
+        this.platform.api.hap.Characteristic.SerialNumber,
         this.accessory.context.device.id.toString()
       );
 
     // get the LeakDetected service if it exists, otherwise create a new LeakSensor service
     this.service =
-      this.accessory.getService(this.platform.Service.LeakSensor) ||
-      this.accessory.addService(this.platform.Service.LeakSensor);
+      this.accessory.getService(this.platform.api.hap.Service.LeakSensor) ||
+      this.accessory.addService(this.platform.api.hap.Service.LeakSensor);
 
     // set the service name, this is what is displayed as the default name on the Home app
     this.service.setCharacteristic(
-      this.platform.Characteristic.Name,
+      this.platform.api.hap.Characteristic.Name,
       accessory.context.device.name
     );
 
     // create handlers for required characteristics
     // see https://developers.homebridge.io/#/service/LeakSensor
     this.service
-      .getCharacteristic(this.platform.Characteristic.LeakDetected)
+      .getCharacteristic(this.platform.api.hap.Characteristic.LeakDetected)
       .onGet(this.handleLeakDetected.bind(this));
 
     // subscribe to device events
@@ -74,8 +75,8 @@ export class LeakSensorAccessory {
     );
     const leak = findStateByName(leakAttributes, 'leak') as boolean;
     const currentValue = leak
-      ? this.platform.Characteristic.LeakDetected.LEAK_DETECTED
-      : this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+      ? this.platform.api.hap.Characteristic.LeakDetected.LEAK_DETECTED
+      : this.platform.api.hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
     this.state.leak.current = currentValue;
     return currentValue;
   }
@@ -92,11 +93,11 @@ export class LeakSensorAccessory {
     }
     const leak =
       event.last_read_state === 'true'
-        ? this.platform.Characteristic.LeakDetected.LEAK_DETECTED
-        : this.platform.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+        ? this.platform.api.hap.Characteristic.LeakDetected.LEAK_DETECTED
+        : this.platform.api.hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
     this.state.leak.current = leak;
     this.service.updateCharacteristic(
-      this.platform.Characteristic.LeakDetected,
+      this.platform.api.hap.Characteristic.LeakDetected,
       leak
     );
   }

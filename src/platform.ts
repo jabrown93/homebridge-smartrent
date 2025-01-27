@@ -1,10 +1,4 @@
-import {
-  API,
-  DynamicPlatformPlugin,
-  Logger,
-  Service,
-  Characteristic,
-} from 'homebridge';
+import { API, DynamicPlatformPlugin, Logger } from 'homebridge';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import {
   AccessoryContext,
@@ -23,10 +17,6 @@ import { SmartRentPlatformConfig } from './lib/config';
  * SmartRentPlatform
  */
 export class SmartRentPlatform implements DynamicPlatformPlugin {
-  public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic =
-    this.api.hap.Characteristic;
-
   public readonly smartRentApi: SmartRentApi;
   public readonly accessories: SmartRentAccessory[] = [];
 

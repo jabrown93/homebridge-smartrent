@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
-    "module": "commonjs",
-    "lib": ["es2015", "es2016", "es2017", "es2018"],
+    "lib": ["ES2022"],
+    "module": "ES2022",
+    "target": "ES2022",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -12,8 +12,9 @@
     "esModuleInterop": true,
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*.ts"],
+  "include": [".eslintrc.json", "homebridge-ui", "src/**/*.ts"],
   "exclude": ["**/*.spec.ts"]
 }

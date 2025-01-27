@@ -45,32 +45,32 @@ export class SwitchMultilevelAccessory {
 
     // set accessory information
     this.accessory
-      .getService(this.platform.Service.AccessoryInformation)!
+      .getService(this.platform.api.hap.Service.AccessoryInformation)!
       .setCharacteristic(
-        this.platform.Characteristic.SerialNumber,
+        this.platform.api.hap.Characteristic.SerialNumber,
         this.accessory.context.device.id.toString()
       );
 
     // get the Switch Multilevel service if it exists, otherwise create a new Switch Multilevel service
     this.service =
-      this.accessory.getService(this.platform.Service.Lightbulb) ||
-      this.accessory.addService(this.platform.Service.Lightbulb);
+      this.accessory.getService(this.platform.api.hap.Service.Lightbulb) ||
+      this.accessory.addService(this.platform.api.hap.Service.Lightbulb);
 
     // set the service name, this is what is displayed as the default name on the Home app
     this.service.setCharacteristic(
-      this.platform.Characteristic.Name,
+      this.platform.api.hap.Characteristic.Name,
       accessory.context.device.name
     );
 
     // create handlers for required characteristics
     // see https://developers.homebridge.io/#/service/Lightbulb
     this.service
-      .getCharacteristic(this.platform.Characteristic.On)
+      .getCharacteristic(this.platform.api.hap.Characteristic.On)
       .onGet(this.handleOnGet.bind(this))
       .onSet(this.handleOnSet.bind(this));
 
     this.service
-      .getCharacteristic(this.platform.Characteristic.Brightness)
+      .getCharacteristic(this.platform.api.hap.Characteristic.Brightness)
       .onGet(this.handleBrightnessGet.bind(this))
       .onSet(this.handleBrightnessSet.bind(this));
 
@@ -95,7 +95,7 @@ export class SwitchMultilevelAccessory {
     this.state.on.current = 0;
 
     this.service.updateCharacteristic(
-      this.platform.Characteristic.On,
+      this.platform.api.hap.Characteristic.On,
       this.state.on.current
     );
   }

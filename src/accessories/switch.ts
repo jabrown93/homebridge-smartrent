@@ -37,27 +37,27 @@ export class SwitchAccessory {
 
     // set accessory information
     this.accessory
-      .getService(this.platform.Service.AccessoryInformation)!
+      .getService(this.platform.api.hap.Service.AccessoryInformation)!
       .setCharacteristic(
-        this.platform.Characteristic.SerialNumber,
+        this.platform.api.hap.Characteristic.SerialNumber,
         this.accessory.context.device.id.toString()
       );
 
     // get the Switch service if it exists, otherwise create a new Switch service
     this.service =
-      this.accessory.getService(this.platform.Service.Switch) ||
-      this.accessory.addService(this.platform.Service.Switch);
+      this.accessory.getService(this.platform.api.hap.Service.Switch) ||
+      this.accessory.addService(this.platform.api.hap.Service.Switch);
 
     // set the service name, this is what is displayed as the default name on the Home app
     this.service.setCharacteristic(
-      this.platform.Characteristic.Name,
+      this.platform.api.hap.Characteristic.Name,
       accessory.context.device.name
     );
 
     // create handlers for required characteristics
     // see https://developers.homebridge.io/#/service/Switch
     this.service
-      .getCharacteristic(this.platform.Characteristic.On)
+      .getCharacteristic(this.platform.api.hap.Characteristic.On)
       .onGet(this.handleOnGet.bind(this))
       .onSet(this.handleOnSet.bind(this));
 
@@ -78,7 +78,7 @@ export class SwitchAccessory {
 
     this.state.on.current = event.last_read_state === 'true' ? 0 : 1;
     this.service.updateCharacteristic(
-      this.platform.Characteristic.On,
+      this.platform.api.hap.Characteristic.On,
       this.state.on.current
     );
   }

@@ -31,46 +31,46 @@ export class LockAccessory {
       hubId: this.accessory.context.device.room.hub_id.toString(),
       deviceId: this.accessory.context.device.id.toString(),
       locked: {
-        current: this.platform.Characteristic.LockTargetState.UNSECURED,
-        target: this.platform.Characteristic.LockTargetState.UNSECURED,
+        current: this.platform.api.hap.Characteristic.LockTargetState.UNSECURED,
+        target: this.platform.api.hap.Characteristic.LockTargetState.UNSECURED,
       },
     };
 
     // set accessory information
     this.accessory
-      .getService(this.platform.Service.AccessoryInformation)!
+      .getService(this.platform.api.hap.Service.AccessoryInformation)!
       .setCharacteristic(
-        this.platform.Characteristic.SerialNumber,
+        this.platform.api.hap.Characteristic.SerialNumber,
         this.accessory.context.device.id.toString()
       );
 
     // set the battery level service for the lock accessory
     this.battery =
-      this.accessory.getService(this.platform.Service.Battery) ||
-      this.accessory.addService(this.platform.Service.Battery);
+      this.accessory.getService(this.platform.api.hap.Service.Battery) ||
+      this.accessory.addService(this.platform.api.hap.Service.Battery);
     this.battery
-      .getCharacteristic(this.platform.Characteristic.BatteryLevel)
+      .getCharacteristic(this.platform.api.hap.Characteristic.BatteryLevel)
       .onGet(() => this.handleBatteryLevelGet());
 
     // get the LockMechanism service if it exists, otherwise create a new LockMechanism service
     this.service =
-      this.accessory.getService(this.platform.Service.LockMechanism) ||
-      this.accessory.addService(this.platform.Service.LockMechanism);
+      this.accessory.getService(this.platform.api.hap.Service.LockMechanism) ||
+      this.accessory.addService(this.platform.api.hap.Service.LockMechanism);
 
     // set the service name, this is what is displayed as the default name on the Home app
     this.service.setCharacteristic(
-      this.platform.Characteristic.Name,
+      this.platform.api.hap.Characteristic.Name,
       accessory.context.device.name
     );
 
     // create handlers for required characteristics
     // see https://developers.homebridge.io/#/service/LockMechanism
     this.service
-      .getCharacteristic(this.platform.Characteristic.LockCurrentState)
+      .getCharacteristic(this.platform.api.hap.Characteristic.LockCurrentState)
       .onGet(this.handleLockCurrentStateGet.bind(this));
 
     this.service
-      .getCharacteristic(this.platform.Characteristic.LockTargetState)
+      .getCharacteristic(this.platform.api.hap.Characteristic.LockTargetState)
       .onGet(this.handleLockTargetStateGet.bind(this))
       .onSet(this.handleLockTargetStateSet.bind(this));
 
@@ -106,8 +106,8 @@ export class LockAccessory {
     );
     const locked = findStateByName(lockAttributes, 'locked') as boolean;
     const currentValue = locked
-      ? this.platform.Characteristic.LockTargetState.SECURED
-      : this.platform.Characteristic.LockTargetState.UNSECURED;
+      ? this.platform.api.hap.Characteristic.LockTargetState.SECURED
+      : this.platform.api.hap.Characteristic.LockTargetState.UNSECURED;
     this.state.locked.current = currentValue;
     this.platform.log.debug(
       'Triggered GET LockCurrentState Done',
@@ -130,8 +130,8 @@ export class LockAccessory {
     );
     const locked = findStateByName(lockAttributes, 'locked') as boolean;
     return locked
-      ? this.platform.Characteristic.LockTargetState.SECURED
-      : this.platform.Characteristic.LockTargetState.UNSECURED;
+      ? this.platform.api.hap.Characteristic.LockTargetState.SECURED
+      : this.platform.api.hap.Characteristic.LockTargetState.UNSECURED;
   }
 
   /**
@@ -160,14 +160,14 @@ export class LockAccessory {
 
     const currentValue =
       event.last_read_state === 'true'
-        ? this.platform.Characteristic.LockTargetState.SECURED
-        : this.platform.Characteristic.LockTargetState.UNSECURED;
+        ? this.platform.api.hap.Characteristic.LockTargetState.SECURED
+        : this.platform.api.hap.Characteristic.LockTargetState.UNSECURED;
     this.service.updateCharacteristic(
-      this.platform.Characteristic.LockCurrentState,
+      this.platform.api.hap.Characteristic.LockCurrentState,
       currentValue
     );
     this.service.updateCharacteristic(
-      this.platform.Characteristic.LockTargetState,
+      this.platform.api.hap.Characteristic.LockTargetState,
       currentValue
     );
   }
@@ -190,21 +190,27 @@ export class LockAccessory {
       this.platform.log.debug('lockAttributes', lockAttributes);
       const locked = findStateByName(lockAttributes, 'locked') as boolean;
       const currentValue = locked
-        ? this.platform.Characteristic.LockTargetState.SECURED
-        : this.platform.Characteristic.LockTargetState.UNSECURED;
+        ? this.platform.api.hap.Characteristic.LockTargetState.SECURED
+        : this.platform.api.hap.Characteristic.LockTargetState.UNSECURED;
       this.state.locked.current = currentValue;
       this.state.locked.target = currentValue;
       this.service
-        .getCharacteristic(this.platform.Characteristic.LockCurrentState)
+        .getCharacteristic(
+          this.platform.api.hap.Characteristic.LockCurrentState
+        )
         .updateValue(this.state.locked.current);
       this.service
-        .getCharacteristic(this.platform.Characteristic.LockTargetState)
+        .getCharacteristic(this.platform.api.hap.Characteristic.LockTargetState)
         .updateValue(this.state.locked.target);
     } catch (err) {
       this.platform.log.error('Error getting lock state', err);
       this.service
-        .getCharacteristic(this.platform.Characteristic.LockCurrentState)
-        .updateValue(this.platform.Characteristic.LockCurrentState.UNKNOWN);
+        .getCharacteristic(
+          this.platform.api.hap.Characteristic.LockCurrentState
+        )
+        .updateValue(
+          this.platform.api.hap.Characteristic.LockCurrentState.UNKNOWN
+        );
     }
 
     this.platform.log.debug(

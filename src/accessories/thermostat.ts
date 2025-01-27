@@ -57,8 +57,10 @@ export class ThermostatAccessory {
       hubId: this.accessory.context.device.room.hub_id.toString(),
       deviceId: this.accessory.context.device.id.toString(),
       heating_cooling_state: {
-        current: this.platform.Characteristic.CurrentHeatingCoolingState.OFF,
-        target: this.platform.Characteristic.TargetHeatingCoolingState.OFF,
+        current:
+          this.platform.api.hap.Characteristic.CurrentHeatingCoolingState.OFF,
+        target:
+          this.platform.api.hap.Characteristic.TargetHeatingCoolingState.OFF,
       },
       current_temperature: {
         current: -270,
@@ -69,8 +71,11 @@ export class ThermostatAccessory {
       },
       temperature_display_units: {
         current:
-          this.platform.Characteristic.TemperatureDisplayUnits.FAHRENHEIT,
-        target: this.platform.Characteristic.TemperatureDisplayUnits.FAHRENHEIT,
+          this.platform.api.hap.Characteristic.TemperatureDisplayUnits
+            .FAHRENHEIT,
+        target:
+          this.platform.api.hap.Characteristic.TemperatureDisplayUnits
+            .FAHRENHEIT,
       },
       current_relative_humidity: {
         current: 0,
@@ -91,81 +96,89 @@ export class ThermostatAccessory {
 
     // set accessory information
     this.accessory
-      .getService(this.platform.Service.AccessoryInformation)!
+      .getService(this.platform.api.hap.Service.AccessoryInformation)!
       .setCharacteristic(
-        this.platform.Characteristic.SerialNumber,
+        this.platform.api.hap.Characteristic.SerialNumber,
         this.accessory.context.device.id.toString()
       );
 
     // get the Thermostat service if it exists, otherwise create a new Thermostat service
     this.thermostatService =
-      this.accessory.getService(this.platform.Service.Thermostat) ||
-      this.accessory.addService(this.platform.Service.Thermostat);
+      this.accessory.getService(this.platform.api.hap.Service.Thermostat) ||
+      this.accessory.addService(this.platform.api.hap.Service.Thermostat);
 
     // set the service name, this is what is displayed as the default name on the Home app
     this.thermostatService.setCharacteristic(
-      this.platform.Characteristic.Name,
+      this.platform.api.hap.Characteristic.Name,
       accessory.context.device.name
     );
 
     // create handlers for required characteristics
     this.thermostatService
       .getCharacteristic(
-        this.platform.Characteristic.CurrentHeatingCoolingState
+        this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
       )
       .onGet(this.handleCurrentHeatingCoolingStateGet.bind(this));
 
     this.thermostatService
-      .getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
+      .getCharacteristic(
+        this.platform.api.hap.Characteristic.TargetHeatingCoolingState
+      )
       .onGet(this.handleTargetHeatingCoolingStateGet.bind(this))
       .onSet(this.handleTargetHeatingCoolingStateSet.bind(this));
 
     this.thermostatService
-      .getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+      .getCharacteristic(
+        this.platform.api.hap.Characteristic.CurrentTemperature
+      )
       .onGet(this.handleCurrentTemperatureGet.bind(this));
 
     this.thermostatService
-      .getCharacteristic(this.platform.Characteristic.TargetTemperature)
+      .getCharacteristic(this.platform.api.hap.Characteristic.TargetTemperature)
       .onGet(this.handleTargetTemperatureGet.bind(this))
       .onSet(this.handleTargetTemperatureSet.bind(this));
 
     this.thermostatService
-      .getCharacteristic(this.platform.Characteristic.TemperatureDisplayUnits)
+      .getCharacteristic(
+        this.platform.api.hap.Characteristic.TemperatureDisplayUnits
+      )
       .onGet(this.handleTemperatureDisplayUnitsGet.bind(this))
       .onSet(this.handleTemperatureDisplayUnitsSet.bind(this));
 
     this.thermostatService
-      .getCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity)
+      .getCharacteristic(
+        this.platform.api.hap.Characteristic.CurrentRelativeHumidity
+      )
       .onGet(this.handleCurrentRelativeHumidityGet.bind(this));
 
     this.thermostatService
       .getCharacteristic(
-        this.platform.Characteristic.CoolingThresholdTemperature
+        this.platform.api.hap.Characteristic.CoolingThresholdTemperature
       )
       .onGet(this.handleCoolingThresholdTemperatureGet.bind(this))
       .onSet(this.handleCoolingThresholdTemperatureSet.bind(this));
 
     this.thermostatService
       .getCharacteristic(
-        this.platform.Characteristic.HeatingThresholdTemperature
+        this.platform.api.hap.Characteristic.HeatingThresholdTemperature
       )
       .onGet(this.handleHeatingThresholdTemperatureGet.bind(this))
       .onSet(this.handleHeatingThresholdTemperatureSet.bind(this));
 
     // get the Fan service if it exists, otherwise create a new Fan service
     this.fanService =
-      this.accessory.getService(this.platform.Service.Fan) ||
-      this.accessory.addService(this.platform.Service.Fan);
+      this.accessory.getService(this.platform.api.hap.Service.Fan) ||
+      this.accessory.addService(this.platform.api.hap.Service.Fan);
 
     // set the service name, this is what is displayed as the default name on the Home app
     this.fanService.setCharacteristic(
-      this.platform.Characteristic.Name,
+      this.platform.api.hap.Characteristic.Name,
       accessory.context.device.name
     );
 
     // create handlers for required characteristics
     this.fanService
-      .getCharacteristic(this.platform.Characteristic.On)
+      .getCharacteristic(this.platform.api.hap.Characteristic.On)
       .onGet(this.handleOnGet.bind(this))
       .onSet(this.handleOnSet.bind(this));
 
@@ -204,7 +217,7 @@ export class ThermostatAccessory {
     const humidity = Math.round(Number(event.last_read_state));
     this.state.current_relative_humidity.current = humidity;
     this.thermostatService.updateCharacteristic(
-      this.platform.Characteristic.CurrentRelativeHumidity,
+      this.platform.api.hap.Characteristic.CurrentRelativeHumidity,
       humidity
     );
   }
@@ -215,7 +228,7 @@ export class ThermostatAccessory {
     );
     this.state.current_temperature.current = temperature;
     this.thermostatService.updateCharacteristic(
-      this.platform.Characteristic.CurrentTemperature,
+      this.platform.api.hap.Characteristic.CurrentTemperature,
       temperature
     );
   }
@@ -227,7 +240,7 @@ export class ThermostatAccessory {
     this.state.heating_threshold_temperature.current = heatingSetpoint;
     this.state.heating_threshold_temperature.target = heatingSetpoint;
     this.thermostatService.updateCharacteristic(
-      this.platform.Characteristic.HeatingThresholdTemperature,
+      this.platform.api.hap.Characteristic.HeatingThresholdTemperature,
       heatingSetpoint
     );
   }
@@ -239,7 +252,7 @@ export class ThermostatAccessory {
     this.state.cooling_threshold_temperature.current = coolingSetpoint;
     this.state.cooling_threshold_temperature.target = coolingSetpoint;
     this.thermostatService.updateCharacteristic(
-      this.platform.Characteristic.CoolingThresholdTemperature,
+      this.platform.api.hap.Characteristic.CoolingThresholdTemperature,
       coolingSetpoint
     );
   }
@@ -249,33 +262,36 @@ export class ThermostatAccessory {
       event.last_read_state as ThermostatMode
     );
     let actualMode = mode;
-    if (mode === this.platform.Characteristic.TargetHeatingCoolingState.AUTO) {
+    if (
+      mode ===
+      this.platform.api.hap.Characteristic.TargetHeatingCoolingState.AUTO
+    ) {
       // Determine if heating or cooling based on target and current temperature
       if (
         this.state.target_temperature.current <
         this.state.current_temperature.current
       ) {
         actualMode =
-          this.platform.Characteristic.CurrentHeatingCoolingState.COOL;
+          this.platform.api.hap.Characteristic.CurrentHeatingCoolingState.COOL;
       } else if (
         this.state.target_temperature.current >
         this.state.current_temperature.current
       ) {
         actualMode =
-          this.platform.Characteristic.CurrentHeatingCoolingState.HEAT;
+          this.platform.api.hap.Characteristic.CurrentHeatingCoolingState.HEAT;
       } else {
         actualMode =
-          this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
+          this.platform.api.hap.Characteristic.CurrentHeatingCoolingState.OFF;
       }
     }
     this.state.heating_cooling_state.current = actualMode;
     this.state.heating_cooling_state.target = mode;
     this.thermostatService.updateCharacteristic(
-      this.platform.Characteristic.CurrentHeatingCoolingState,
+      this.platform.api.hap.Characteristic.CurrentHeatingCoolingState,
       actualMode
     );
     this.thermostatService.updateCharacteristic(
-      this.platform.Characteristic.TargetHeatingCoolingState,
+      this.platform.api.hap.Characteristic.TargetHeatingCoolingState,
       mode
     );
   }
@@ -286,7 +302,7 @@ export class ThermostatAccessory {
     );
     this.state.fan_on.current = fanMode;
     this.fanService.updateCharacteristic(
-      this.platform.Characteristic.On,
+      this.platform.api.hap.Characteristic.On,
       fanMode
     );
   }
@@ -296,13 +312,17 @@ export class ThermostatAccessory {
   ) {
     switch (thermostatMode) {
       case 'off':
-        return this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
+        return this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
+          .OFF;
       case 'cool':
-        return this.platform.Characteristic.CurrentHeatingCoolingState.COOL;
+        return this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
+          .COOL;
       case 'heat':
-        return this.platform.Characteristic.CurrentHeatingCoolingState.HEAT;
+        return this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
+          .HEAT;
       default:
-        return this.platform.Characteristic.TargetHeatingCoolingState.OFF;
+        return this.platform.api.hap.Characteristic.TargetHeatingCoolingState
+          .OFF;
     }
   }
 
@@ -311,15 +331,20 @@ export class ThermostatAccessory {
   ) {
     switch (thermostatMode) {
       case 'off':
-        return this.platform.Characteristic.TargetHeatingCoolingState.OFF;
+        return this.platform.api.hap.Characteristic.TargetHeatingCoolingState
+          .OFF;
       case 'cool':
-        return this.platform.Characteristic.TargetHeatingCoolingState.COOL;
+        return this.platform.api.hap.Characteristic.TargetHeatingCoolingState
+          .COOL;
       case 'heat':
-        return this.platform.Characteristic.TargetHeatingCoolingState.HEAT;
+        return this.platform.api.hap.Characteristic.TargetHeatingCoolingState
+          .HEAT;
       case 'auto':
-        return this.platform.Characteristic.TargetHeatingCoolingState.AUTO;
+        return this.platform.api.hap.Characteristic.TargetHeatingCoolingState
+          .AUTO;
       default:
-        return this.platform.Characteristic.TargetHeatingCoolingState.OFF;
+        return this.platform.api.hap.Characteristic.TargetHeatingCoolingState
+          .OFF;
     }
   }
 
@@ -327,13 +352,13 @@ export class ThermostatAccessory {
     targetHeatingCoolingState
   ): ThermostatMode {
     switch (targetHeatingCoolingState) {
-      case this.platform.Characteristic.TargetHeatingCoolingState.OFF:
+      case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.OFF:
         return 'off';
-      case this.platform.Characteristic.TargetHeatingCoolingState.COOL:
+      case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.COOL:
         return 'cool';
-      case this.platform.Characteristic.TargetHeatingCoolingState.HEAT:
+      case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.HEAT:
         return 'heat';
-      case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
+      case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.AUTO:
         return 'auto';
       default:
         return 'off';
@@ -371,14 +396,14 @@ export class ThermostatAccessory {
   ): DeviceAttribute[] {
     const target_temp = this.fromTemperatureCharacteristic(temperature);
     switch (this.state.heating_cooling_state.current) {
-      case this.platform.Characteristic.TargetHeatingCoolingState.OFF:
-      case this.platform.Characteristic.TargetHeatingCoolingState.COOL:
+      case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.OFF:
+      case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.COOL:
         return [{ name: 'cool_target_temp', state: target_temp }];
 
-      case this.platform.Characteristic.TargetHeatingCoolingState.HEAT:
+      case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.HEAT:
         return [{ name: 'heat_target_temp', state: target_temp }];
 
-      case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
+      case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.AUTO:
       default:
         return [];
     }
@@ -533,7 +558,8 @@ export class ThermostatAccessory {
     this.platform.log.debug('Triggered GET TemperatureDisplayUnits');
 
     // set this to a valid value for TemperatureDisplayUnits
-    return this.platform.Characteristic.TemperatureDisplayUnits.FAHRENHEIT;
+    return this.platform.api.hap.Characteristic.TemperatureDisplayUnits
+      .FAHRENHEIT;
   }
 
   /**
