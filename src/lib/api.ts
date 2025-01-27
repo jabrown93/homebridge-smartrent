@@ -4,7 +4,7 @@ import {
   BaseDeviceResponse,
   DeviceAttribute,
   DeviceDataUnion,
-} from '../devices';
+} from '../devices/index.js';
 
 type UnitData = {
   building: string;

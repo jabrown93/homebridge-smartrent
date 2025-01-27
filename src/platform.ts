@@ -8,9 +8,9 @@ import {
   SwitchAccessory,
   ThermostatAccessory,
   SwitchMultilevelAccessory,
-} from './accessories';
+} from './accessories/index.js';
 import { SmartRentApi } from './lib/api.js';
-import { DeviceDataUnion } from './devices';
+import { DeviceDataUnion } from './devices/index.js';
 import { SmartRentPlatformConfig } from './lib/config.js';
 
 /**

@@ -1,4 +1,4 @@
-import { DeviceAttribute } from '../devices';
+import { DeviceAttribute } from '../devices/index.js';
 
 export function findStateByName(
   objects: DeviceAttribute[],

@@ -1,5 +1,5 @@
 import { PlatformAccessory, UnknownContext } from 'homebridge';
-import { DeviceDataUnion } from '../devices';
+import { DeviceDataUnion } from '../devices/index.js';
 
 export * from './leakSensor.js';
 export * from './lock.js';
