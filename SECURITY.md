@@ -10,7 +10,8 @@ The following versions are supported
 
 ## Reporting a Vulnerability
 
-If you believe you have found a security vulnerability in of my repositories, please report it to me through coordinated disclosure.
+If you believe you have found a security vulnerability in of my repositories, please report it to me through coordinated
+disclosure.
 
 Please do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.
 
