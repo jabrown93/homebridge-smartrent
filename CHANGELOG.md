@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.18-beta.3](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.18-beta.2...v2.0.18-beta.3) (2025-01-27)
+
+### Bug Fixes
+
+* explicit index files ([857da6e](https://github.com/jabrown93/homebridge-smartrent/commit/857da6ecced0d4fca078df1e6d22bc43a69cc78b))
+
 ## [2.0.18-beta.2](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.18-beta.1...v2.0.18-beta.2) (2025-01-27)
 
 ### Bug Fixes
