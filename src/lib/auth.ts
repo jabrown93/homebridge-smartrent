@@ -7,14 +7,14 @@ import axios, {
 } from 'axios';
 import { existsSync, promises as fsPromises } from 'fs';
 import { resolve as pathResolve } from 'path';
-import { SmartRentPlatformConfig } from './config';
+import { SmartRentPlatformConfig } from './config.js';
 import {
   BASE_URL,
   SESSION_PATH,
   TFA_PATH,
   WEBSOCKET_TOKEN_PATH,
   AUTH_CLIENT_HEADERS,
-} from './request';
+} from './request.js';
 import { jwtDecode } from 'jwt-decode';
 import { authenticator } from 'otplib';
 

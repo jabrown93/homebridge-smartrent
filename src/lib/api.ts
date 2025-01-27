@@ -1,5 +1,5 @@
-import { SmartRentPlatform } from '../platform';
-import { SmartRentApiClient, SmartRentWebsocketClient } from './client';
+import { SmartRentPlatform } from '../platform.js';
+import { SmartRentApiClient, SmartRentWebsocketClient } from './client.js';
 import {
   BaseDeviceResponse,
   DeviceAttribute,

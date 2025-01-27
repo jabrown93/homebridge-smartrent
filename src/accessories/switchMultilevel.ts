@@ -1,9 +1,9 @@
 import { CharacteristicValue, Service } from 'homebridge';
-import { SmartRentPlatform } from '../platform';
+import { SmartRentPlatform } from '../platform.js';
 import type { SmartRentAccessory } from '.';
 import { SwitchMultilevelData } from '../devices';
-import { WSEvent } from '../lib/client';
-import { findStateByName } from '../lib/utils';
+import { WSEvent } from '../lib/client.js';
+import { findStateByName } from '../lib/utils.js';
 
 /**
  * Switch Muiltilevel Accessory

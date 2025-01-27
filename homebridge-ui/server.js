@@ -4,7 +4,7 @@ const {
 } = require('@homebridge/plugin-ui-utils');
 const fs = require('fs');
 const fsPromises = fs.promises;
-const { SmartRentAuthClient } = require('../dist/lib/auth');
+const { SmartRentAuthClient } = require('../dist/lib/auth.js');
 
 class PluginUiServer extends HomebridgePluginUiServer {
   constructor() {

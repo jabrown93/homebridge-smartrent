@@ -1,5 +1,5 @@
 import { CharacteristicValue, Service } from 'homebridge';
-import { SmartRentPlatform } from '../platform';
+import { SmartRentPlatform } from '../platform.js';
 import type { SmartRentAccessory } from '.';
 import {
   DeviceAttribute,
@@ -7,8 +7,8 @@ import {
   ThermostatFanMode,
   ThermostatMode,
 } from '../devices';
-import { WSEvent } from '../lib/client';
-import { findStateByName } from '../lib/utils';
+import { WSEvent } from '../lib/client.js';
+import { findStateByName } from '../lib/utils.js';
 
 export class ThermostatAccessory {
   private readonly thermostatService: Service;

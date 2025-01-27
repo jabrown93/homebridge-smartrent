@@ -1,5 +1,5 @@
 import { API, DynamicPlatformPlugin, Logger } from 'homebridge';
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import {
   AccessoryContext,
   SmartRentAccessory,
@@ -9,9 +9,9 @@ import {
   ThermostatAccessory,
   SwitchMultilevelAccessory,
 } from './accessories';
-import { SmartRentApi } from './lib/api';
+import { SmartRentApi } from './lib/api.js';
 import { DeviceDataUnion } from './devices';
-import { SmartRentPlatformConfig } from './lib/config';
+import { SmartRentPlatformConfig } from './lib/config.js';
 
 /**
  * SmartRentPlatform

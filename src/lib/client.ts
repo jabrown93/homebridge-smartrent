@@ -4,9 +4,14 @@ import axios, {
   AxiosInstance,
   AxiosRequestHeaders,
 } from 'axios';
-import { API_URL, API_CLIENT_HEADERS, WS_API_URL, WS_VERSION } from './request';
-import { SmartRentAuthClient } from './auth';
-import { SmartRentPlatform } from '../platform';
+import {
+  API_URL,
+  API_CLIENT_HEADERS,
+  WS_API_URL,
+  WS_VERSION,
+} from './request.js';
+import { SmartRentAuthClient } from './auth.js';
+import { SmartRentPlatform } from '../platform.js';
 import WebSocket from 'ws';
 import { Logger } from 'homebridge';
 
