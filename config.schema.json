@@ -1,8 +1,7 @@
 {
   "pluginAlias": "SmartRent",
   "pluginType": "platform",
-  "singular": true,
-  "customUi": true,
+  "strictValidation": true,
   "headerDisplay": "Homebridge plugin for SmartRent installations",
   "footerDisplay": "For documentation please see [GitHub](https://github.com/jabrown93/homebridge-smartrent)",
   "schema": {
