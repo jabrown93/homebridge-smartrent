@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.0-beta.3](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.2...v2.1.0-beta.3) (2025-02-02)
+
+### Bug Fixes
+
+* disable custom ui ([96a40f8](https://github.com/jabrown93/homebridge-smartrent/commit/96a40f8f815ac125656d839521dab475f7682e79))
+
 ## [2.1.0-beta.2](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.1...v2.1.0-beta.2) (2025-02-02)
 
 ### Bug Fixes
