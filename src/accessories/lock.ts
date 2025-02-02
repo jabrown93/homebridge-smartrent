@@ -110,25 +110,6 @@ export class LockAccessory {
       ? this.platform.api.hap.Characteristic.LockTargetState.SECURED
       : this.platform.api.hap.Characteristic.LockTargetState.UNSECURED;
     this.state.locked.current = currentValue;
-    if (
-      !locked &&
-      this.platform.config.enableAutoLock &&
-      this.platform.config.autoLockDelayInMinutes
-    ) {
-      this.platform.log.debug('Lock is unlocked, starting timer to relock');
-      if (this.timer) {
-        clearTimeout(this.timer);
-      }
-      this.timer = setTimeout(
-        () => {
-          this.platform.log.debug('Relocking lock');
-          this.handleLockTargetStateSet(true);
-        },
-        this.platform.config.autoLockDelayInMinutes * 60 * 1000
-      );
-    } else if (this.timer) {
-      clearTimeout(this.timer);
-    }
     this.platform.log.debug(
       'Triggered GET LockCurrentState Done',
       this.state.locked.current
@@ -166,6 +147,29 @@ export class LockAccessory {
       this.state.deviceId,
       attributes
     );
+    if (
+      !value &&
+      this.platform.config.enableAutoLock &&
+      this.platform.config.autoLockDelayInMinutes
+    ) {
+      this.platform.log.debug(
+        'Lock is unlocked, starting timer to relock in ',
+        this.platform.config.autoLockDelayInMinutes,
+        ' minutes'
+      );
+      if (this.timer) {
+        clearTimeout(this.timer);
+      }
+      this.timer = setTimeout(
+        () => {
+          this.platform.log.debug('Relocking lock');
+          this.handleLockTargetStateSet(true);
+        },
+        this.platform.config.autoLockDelayInMinutes * 60 * 1000
+      );
+    } else if (this.timer) {
+      clearTimeout(this.timer);
+    }
     this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
   }
 
