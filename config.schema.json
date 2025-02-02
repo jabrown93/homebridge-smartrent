@@ -23,8 +23,8 @@
         "type": "string",
         "required": false,
         "pattern": "^[A-Z0-9]{32}$",
-        "minLength": 6,
-        "maxLength": 6,
+        "minLength": 32,
+        "maxLength": 32,
         "description": "If you have enabled two-factor authentication on your SmartRent account, enter the seed secret here."
       },
       "enableLeakSensors": {
