@@ -16,6 +16,7 @@
     "type": "git",
     "url": "git+https://github.com/jabrown93/homebridge-smartrent.git"
   },
+  "type": "module",
   "publishConfig": {
     "access": "public"
   },
@@ -27,7 +28,6 @@
   "type": "module",
   "files": [
     "src",
-    "homebridge-ui",
     "dist",
     "config.example.json",
     "config.schema.json",
