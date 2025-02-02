@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.0-beta.2](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.1...v2.1.0-beta.2) (2025-02-02)
+
+### Bug Fixes
+
+* set type as module in package.json ([2a1c0b9](https://github.com/jabrown93/homebridge-smartrent/commit/2a1c0b92ee99137ca7f5c880c40cb610ac7777bf))
+* use standard config screen ([67bb1c9](https://github.com/jabrown93/homebridge-smartrent/commit/67bb1c9680f5f587b6aa63cd71d08f8b4df32e4b))
+* use standard config screen ([68d0365](https://github.com/jabrown93/homebridge-smartrent/commit/68d03658d7b80c94273ca35b6a73209a2fe29fda))
+
 ## [2.1.0-beta.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.18-beta.3...v2.1.0-beta.1) (2025-02-02)
 
 ### Features
