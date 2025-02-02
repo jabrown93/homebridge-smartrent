@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.0-beta.4](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.3...v2.1.0-beta.4) (2025-02-02)
+
+### Bug Fixes
+
+* update tfaSecret min and max length ([ebe1d93](https://github.com/jabrown93/homebridge-smartrent/commit/ebe1d93e68763dcdad9af3b6b5a7435142a6653f))
+
 ## [2.1.0-beta.3](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.2...v2.1.0-beta.3) (2025-02-02)
 
 ### Bug Fixes
