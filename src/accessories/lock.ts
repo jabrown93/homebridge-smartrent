@@ -13,6 +13,7 @@ import { findStateByName } from '../lib/utils.js';
 export class LockAccessory {
   private readonly service: Service;
   private readonly battery: Service;
+  private timer?: NodeJS.Timeout;
 
   private readonly state: {
     hubId: string;
@@ -50,7 +51,7 @@ export class LockAccessory {
       this.accessory.addService(this.platform.api.hap.Service.Battery);
     this.battery
       .getCharacteristic(this.platform.api.hap.Characteristic.BatteryLevel)
-      .onGet(() => this.handleBatteryLevelGet());
+      .onGet(this.handleBatteryLevelGet.bind(this));
 
     // get the LockMechanism service if it exists, otherwise create a new LockMechanism service
     this.service =
@@ -109,6 +110,25 @@ export class LockAccessory {
       ? this.platform.api.hap.Characteristic.LockTargetState.SECURED
       : this.platform.api.hap.Characteristic.LockTargetState.UNSECURED;
     this.state.locked.current = currentValue;
+    if (
+      !locked &&
+      this.platform.config.enableAutoLock &&
+      this.platform.config.autoLockDelayInMinutes
+    ) {
+      this.platform.log.debug('Lock is unlocked, starting timer to relock');
+      if (this.timer) {
+        clearTimeout(this.timer);
+      }
+      this.timer = setTimeout(
+        () => {
+          this.platform.log.debug('Relocking lock');
+          this.handleLockTargetStateSet(true);
+        },
+        this.platform.config.autoLockDelayInMinutes * 60 * 1000
+      );
+    } else if (this.timer) {
+      clearTimeout(this.timer);
+    }
     this.platform.log.debug(
       'Triggered GET LockCurrentState Done',
       this.state.locked.current
@@ -140,11 +160,11 @@ export class LockAccessory {
   async handleLockTargetStateSet(value: CharacteristicValue) {
     this.platform.log.debug('Triggered SET LockTargetState:', value);
     this.state.locked.target = value;
-    const attriubtes = [{ name: 'locked', state: !!value }];
+    const attributes = [{ name: 'locked', state: !!value }];
     const lockAttributes = await this.platform.smartRentApi.setState<LockData>(
       this.state.hubId,
       this.state.deviceId,
-      attriubtes
+      attributes
     );
     this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
   }

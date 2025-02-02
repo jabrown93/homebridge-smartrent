@@ -11,4 +11,6 @@ export interface SmartRentPlatformConfig extends PlatformConfig {
   enableSwitches?: boolean;
   enableThermostats?: boolean;
   enableSwitchMultiLevels?: boolean;
+  enableAutoLock?: boolean;
+  autoLockDelayInMinutes?: number;
 }

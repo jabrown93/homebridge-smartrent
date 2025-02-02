@@ -68,6 +68,20 @@
         "type": "string",
         "required": false,
         "description": "Only necessary if you have multiple units in your SmartRent account. Get the name from the top of the More tab in the SmartRent app."
+      },
+      "enableAutoLock": {
+        "title": "Enable auto locking after a delay from the last unlock",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Uncheck to disable auto lock."
+      },
+      "autoLockDelayInMinutes": {
+        "title": "Auto lock delay in minutes",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "description": "The delay in minutes after the last unlock to automatically lock the door."
       }
     }
   }
