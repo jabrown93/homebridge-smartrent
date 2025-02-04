@@ -3,62 +3,11 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [2.1.0-beta.6](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.5...v2.1.0-beta.6) (2025-02-04)
+## [2.0.18](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.17...v2.0.18) (2025-02-02)
 
 ### Bug Fixes
 
-* set auto lock on all types of events ([d768882](https://github.com/jabrown93/homebridge-smartrent/commit/d76888217a717c301e081231e0cbda242f4fbd94))
-
-## [2.1.0-beta.5](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.4...v2.1.0-beta.5) (2025-02-02)
-
-### Bug Fixes
-
-* fix auto locking conditions ([631afb2](https://github.com/jabrown93/homebridge-smartrent/commit/631afb21fac222a8affef37f12918913f2965b26))
-
-## [2.1.0-beta.4](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.3...v2.1.0-beta.4) (2025-02-02)
-
-### Bug Fixes
-
-* update tfaSecret min and max length ([ebe1d93](https://github.com/jabrown93/homebridge-smartrent/commit/ebe1d93e68763dcdad9af3b6b5a7435142a6653f))
-
-## [2.1.0-beta.3](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.2...v2.1.0-beta.3) (2025-02-02)
-
-### Bug Fixes
-
-* disable custom ui ([96a40f8](https://github.com/jabrown93/homebridge-smartrent/commit/96a40f8f815ac125656d839521dab475f7682e79))
-
-## [2.1.0-beta.2](https://github.com/jabrown93/homebridge-smartrent/compare/v2.1.0-beta.1...v2.1.0-beta.2) (2025-02-02)
-
-### Bug Fixes
-
-* set type as module in package.json ([2a1c0b9](https://github.com/jabrown93/homebridge-smartrent/commit/2a1c0b92ee99137ca7f5c880c40cb610ac7777bf))
-* use standard config screen ([67bb1c9](https://github.com/jabrown93/homebridge-smartrent/commit/67bb1c9680f5f587b6aa63cd71d08f8b4df32e4b))
 * use standard config screen ([68d0365](https://github.com/jabrown93/homebridge-smartrent/commit/68d03658d7b80c94273ca35b6a73209a2fe29fda))
-
-## [2.1.0-beta.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.18-beta.3...v2.1.0-beta.1) (2025-02-02)
-
-### Features
-
-* support auto locking a lock after it's been unlocked ([d4d2471](https://github.com/jabrown93/homebridge-smartrent/commit/d4d24717a428e8a64b80db79e50c1403c6e91b9d))
-
-## [2.0.18-beta.3](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.18-beta.2...v2.0.18-beta.3) (2025-01-27)
-
-### Bug Fixes
-
-* explicit index files ([857da6e](https://github.com/jabrown93/homebridge-smartrent/commit/857da6ecced0d4fca078df1e6d22bc43a69cc78b))
-
-## [2.0.18-beta.2](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.18-beta.1...v2.0.18-beta.2) (2025-01-27)
-
-### Bug Fixes
-
-* properly support modules ([747db4b](https://github.com/jabrown93/homebridge-smartrent/commit/747db4b469762af70664a37a1e15b12e413873ee))
-
-## [2.0.18-beta.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.17...v2.0.18-beta.1) (2025-01-27)
-
-### Bug Fixes
-
-* use access token for websockets and better error handling ([368b2dc](https://github.com/jabrown93/homebridge-smartrent/commit/368b2dc0b2df8cddbfa8b0699c51af3c377ce504))
-* use access token for websockets and better error handling ([898cef1](https://github.com/jabrown93/homebridge-smartrent/commit/898cef181a5f0352a455aafddd7e0d8c9eae4192))
 
 ## [2.0.17](https://github.com/jabrown93/homebridge-smartrent/compare/v2.0.16...v2.0.17) (2025-01-12)
 
