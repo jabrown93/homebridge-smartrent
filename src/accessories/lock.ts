@@ -14,6 +14,7 @@ export class LockAccessory {
   private readonly service: Service;
   private readonly battery: Service;
   private timer?: NodeJS.Timeout;
+  private timerSet: boolean = false;
 
   private readonly state: {
     hubId: string;
@@ -147,37 +148,46 @@ export class LockAccessory {
       this.state.deviceId,
       attributes
     );
+    this.scheduleAutoLock(value);
+
+    this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
+  }
+
+  private scheduleAutoLock(value: CharacteristicValue) {
     if (
-      !value &&
+      value ===
+        this.platform.api.hap.Characteristic.LockTargetState.UNSECURED &&
       this.platform.config.enableAutoLock &&
       this.platform.config.autoLockDelayInMinutes
     ) {
+      if (this.timerSet) {
+        return;
+      }
       this.platform.log.debug(
         'Lock is unlocked, starting timer to relock in ',
         this.platform.config.autoLockDelayInMinutes,
         ' minutes'
       );
-      if (this.timer) {
-        clearTimeout(this.timer);
-      }
+      this.timerSet = true;
       this.timer = setTimeout(
-        () => {
+        async () => {
           this.platform.log.debug('Relocking lock');
-          this.handleLockTargetStateSet(true);
+          await this.handleLockTargetStateSet(true);
+          this.timerSet = false;
         },
         this.platform.config.autoLockDelayInMinutes * 60 * 1000
       );
     } else if (this.timer) {
       clearTimeout(this.timer);
+      this.timerSet = false;
     }
-    this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
   }
 
   /**
    * Handle lock websocket events
    */
   async handleLockEvent(event: WSEvent) {
-    this.platform.log.debug('Recieved event on Lock: ', event);
+    this.platform.log.debug('Received event on Lock: ', event);
     if (event.name !== 'locked') {
       return;
     }
@@ -194,6 +204,7 @@ export class LockAccessory {
       this.platform.api.hap.Characteristic.LockTargetState,
       currentValue
     );
+    this.scheduleAutoLock(currentValue);
   }
 
   /**
@@ -226,6 +237,7 @@ export class LockAccessory {
       this.service
         .getCharacteristic(this.platform.api.hap.Characteristic.LockTargetState)
         .updateValue(this.state.locked.target);
+      this.scheduleAutoLock(currentValue);
     } catch (err) {
       this.platform.log.error('Error getting lock state', err);
       this.service
