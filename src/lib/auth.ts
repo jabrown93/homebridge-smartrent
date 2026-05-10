@@ -16,7 +16,7 @@ import {
   AUTH_CLIENT_HEADERS,
 } from './request.js';
 import { jwtDecode } from 'jwt-decode';
-import { authenticator } from 'otplib';
+import { generateSync } from 'otplib';
 
 const USER_PREFIX = 'User:';
 /** Credentials stored in config.json */
@@ -254,7 +254,7 @@ export class SmartRentAuthClient {
         return;
       }
 
-      const token = authenticator.generate(tfaSecret);
+      const token = generateSync({ secret: tfaSecret });
 
       return this._startTfaSession({
         tfa_api_token: sessionData.tfa_api_token,
