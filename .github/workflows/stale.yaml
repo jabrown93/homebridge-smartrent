@@ -1,26 +1,51 @@
 ---
-name: 'Close stale issues and PRs'
+name: Release
 on:
-  schedule:
-    - cron: '30 1 * * *'
+  push:
+    branches:
+    - main
+    - beta
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
-  actions: write
-  issues: write
-  pull-requests: write
+  contents: write # to be able to publish a GitHub release
+  issues: write # to be able to comment on released issues
+  pull-requests: write # to be able to comment on released pull requests
+  id-token: write # to enable use of OIDC for trusted publishing and npm provenance
 
 jobs:
-  stale:
+  release:
+    name: Release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v10.2.0
-        with:
-          days-before-stale: '30'
-          days-before-close: '7'
-          stale-issue-message: 'This issue has no recent activity and will be closed in 7 days. Comment to keep the issue open.'
-          stale-pr-message: 'This PR has no recent activity and will be closed in 7 days. Comment or update to keep the PR open.'
-          stale-issue-label: 'stale'
-          exempt-issue-labels: 'work-in-progress,disable-stale-bot,needs-triage'
-          exempt-pr-labels: 'work-in-progress,disable-stale-bot,needs-triage'
-          stale-pr-label: 'no-pr-activity'
-          close-issue-message: 'No activity in over 30 days, closing.'
-          close-pr-message: 'No activity in over 30 days, closing.'
+    - uses: actions/create-github-app-token@v2
+      id: app-token
+      with:
+        app-id: ${{ secrets.APP_ID }}
+        private-key: ${{ secrets.APP_PRIVATE_KEY }}
+    - uses: actions/checkout@v6.0.2
+      with:
+        fetch-depth: 0
+        token: ${{ steps.app-token.outputs.token }}
+        # Check out the current branch tip, not github.sha. With
+        # concurrency queueing, a queued run otherwise releases its
+        # trigger SHA and is rejected as non-fast-forward once the
+        # branch has advanced. Pulling the tip turns redundant queued
+        # runs into no-ops instead.
+        ref: ${{ github.ref }}
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: '24'
+        registry-url: 'https://registry.npmjs.org'
+        package-manager-cache: false
+    - run: npm clean-install
+    - run: npm audit signatures
+    - name: Configure atomic git pushes
+      run: git config --global push.atomic true
+    - run: npm run semantic-release
+      env:
+        GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
