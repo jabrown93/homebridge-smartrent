@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.2.3](https://github.com/jabrown93/homebridge-smartrent/compare/v2.2.2...v2.2.3) (2026-05-25)
+
+### Bug Fixes
+
+* **deps:** update dependency homebridge-lib to v8 ([#243](https://github.com/jabrown93/homebridge-smartrent/issues/243)) ([e0b0b87](https://github.com/jabrown93/homebridge-smartrent/commit/e0b0b87a1df752aa8d58e0df58dd5c2ed2581fad))
+* **deps:** update dependency otplib to v13 ([#200](https://github.com/jabrown93/homebridge-smartrent/issues/200)) ([539cc24](https://github.com/jabrown93/homebridge-smartrent/commit/539cc24859d71b8f05e83a06356b04b7a2f2a387))
+
 ## [2.2.2](https://github.com/jabrown93/homebridge-smartrent/compare/v2.2.1...v2.2.2) (2026-02-14)
 
 ### Bug Fixes
