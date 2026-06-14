@@ -38,7 +38,14 @@
         "tarballDir": "dist"
       }
     ],
-    ["@semantic-release/github"],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          { "path": "sbom.cdx.json", "label": "CycloneDX SBOM (sbom.cdx.json)" }
+        ]
+      }
+    ],
     [
       "@semantic-release/git",
       {
