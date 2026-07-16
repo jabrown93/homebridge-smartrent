@@ -91,8 +91,7 @@ export class SwitchMultilevelAccessory {
     switch (event.name) {
       case 'level': {
         const level = Number(event.last_read_state);
-        this.state.brightness.current = level;
-        this.state.on.current = level > 0 ? 1 : 0;
+        this.applyLevel(level);
         this.service.updateCharacteristic(
           this.platform.api.hap.Characteristic.Brightness,
           level
@@ -114,6 +113,14 @@ export class SwitchMultilevelAccessory {
   }
 
   /**
+   * Derive on/off state from a raw level reading and cache both
+   */
+  private applyLevel(level: number) {
+    this.state.brightness.current = level;
+    this.state.on.current = level > 0 ? 1 : 0;
+  }
+
+  /**
    * Handle requests to get the current value of the "On" characteristic
    */
   async handleOnGet(): Promise<CharacteristicValue> {
@@ -127,11 +134,8 @@ export class SwitchMultilevelAccessory {
       switchMultilevelAttributes,
       'level'
     ) as number;
-    const brightness = Number(levelAttribute);
-    const on = brightness > 0 ? 1 : 0;
-    this.state.brightness.current = brightness;
-    this.state.on.current = on;
-    return on;
+    this.applyLevel(Number(levelAttribute));
+    return this.state.on.current;
   }
 
   /**
@@ -153,8 +157,7 @@ export class SwitchMultilevelAccessory {
     ) as number;
 
     const level = Number(levelAttribute);
-    this.state.on.current = level > 0 ? 1 : 0;
-    this.state.brightness.current = level;
+    this.applyLevel(level);
     this.service.updateCharacteristic(
       this.platform.api.hap.Characteristic.Brightness,
       level
@@ -175,8 +178,7 @@ export class SwitchMultilevelAccessory {
       switchMultilevelAttributes,
       'level'
     ) as number;
-    this.state.brightness.current = level;
-    this.state.on.current = Number(level) > 0 ? 1 : 0;
+    this.applyLevel(level);
     return level;
   }
 
@@ -197,8 +199,7 @@ export class SwitchMultilevelAccessory {
       switchMultilevelAttributes,
       'level'
     ) as number;
-    this.state.brightness.current = level;
-    this.state.on.current = Number(level) > 0 ? 1 : 0;
+    this.applyLevel(level);
     this.service.updateCharacteristic(
       this.platform.api.hap.Characteristic.On,
       this.state.on.current
