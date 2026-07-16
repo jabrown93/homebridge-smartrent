@@ -8,10 +8,6 @@ Per `README.md`: this plugin is not actively maintained except for automated dep
 
 ## Commands
 
-- `npm run build` — `clean` + `tsc` (emits to `dist/`).
-- `npm run tsc` — type-check only, no emit. Use this for fast feedback.
-- `npm run lint` / `npm run lint:fix` — ESLint over `src/**.ts`.
-- `npm run prettier` / `npm run format` — repo-wide check / write.
 - `npm run watch` — first-time sets up `test/hbConfig/`, then runs `tsc && homebridge -U ./test/hbConfig -I -D` under nodemon (see `nodemon.json`). Logs go to `test/hbConfig/homebridge.log`.
 - There is no test suite — `npm test` is a stub that exits 0. Don't claim tests pass; verify behavior by running `npm run watch` against a real SmartRent account or by type-checking.
 
@@ -49,10 +45,3 @@ Homebridge dynamic platform plugin. Entry: `src/index.ts` → `src/platform.ts` 
 - `src/accessories/` — HomeKit service/characteristic wiring per device type. Each receives `(platform, accessory)` and registers handlers on `Service` characteristics.
 - `src/lib/request.ts` — base URLs, paths, headers (mimics Safari/web client; bumping `APP_VERSION` may be needed if SmartRent rejects the user agent).
 - `src/lib/config.ts` — `SmartRentPlatformConfig` shape; user-facing schema is `config.schema.json`.
-
-## Conventions
-
-- ESLint config (`eslint.config.mjs`): single quotes, 2-space indent, `max-len: 140`, `eqeqeq`, `curly: all`. Run `npm run lint:fix` before committing.
-- Prettier handles formatting; don't hand-tweak whitespace.
-- Conventional Commits — `feat:`, `fix:`, `chore(deps):`, etc. drive semantic-release versioning.
-- Renovate manages dependency PRs; most recent activity on the repo is dependency bumps.
