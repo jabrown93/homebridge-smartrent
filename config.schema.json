@@ -16,11 +16,13 @@
       "password": {
         "title": "Password",
         "type": "string",
+        "format": "password",
         "required": true
       },
       "tfaSecret": {
         "title": "Two-factor authentication code",
         "type": "string",
+        "format": "password",
         "required": false,
         "pattern": "^[A-Z0-9]{32}$",
         "minLength": 32,
