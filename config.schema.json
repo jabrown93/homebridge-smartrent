@@ -36,6 +36,13 @@
         "default": true,
         "description": "Uncheck to disable leak sensors."
       },
+      "enableMotionSensors": {
+        "title": "Enable motion sensors",
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "description": "Uncheck to disable motion sensors."
+      },
       "enableThermostats": {
         "title": "Enable thermostats",
         "type": "boolean",

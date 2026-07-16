@@ -21,13 +21,16 @@ export type WSEvent = {
   id: number;
   name:
     | 'leak'
+    | 'motion_binary'
     | 'fan_mode'
     | 'current_temp'
     | 'current_humidity'
     | 'heating_setpoint'
     | 'cooling_setpoint'
     | 'mode'
+    | 'operating_state'
     | 'locked'
+    | 'level'
     | 'on'
     | 'notifications';
   remote_id: string;
