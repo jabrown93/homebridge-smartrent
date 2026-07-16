@@ -14,6 +14,7 @@ import { SmartRentAuthClient } from './auth.js';
 import { SmartRentPlatform } from '../platform.js';
 import WebSocket from 'ws';
 import { Logger } from 'homebridge';
+import { redactSensitive } from './utils.js';
 
 export type WSDeviceList = `devices:${string}`;
 export type WSEvent = {
@@ -99,7 +100,10 @@ export class SmartRentApiClient {
       ...config.headers,
       Authorization: `Bearer ${accessToken}`,
     } as AxiosRequestHeaders;
-    this.log.debug('Request:', JSON.stringify(config, null, 2));
+    this.log.debug(
+      'Request:',
+      JSON.stringify(redactSensitive(config), null, 2)
+    );
     return config;
   }
 
@@ -109,7 +113,10 @@ export class SmartRentApiClient {
    * @returns SmartRent response data payload
    */
   private _handleResponse(response: AxiosResponse) {
-    this.log.debug('Response:', JSON.stringify(response.data, null, 2));
+    this.log.debug(
+      'Response:',
+      JSON.stringify(redactSensitive(response.data), null, 2)
+    );
     return response;
   }
 

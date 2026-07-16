@@ -17,6 +17,7 @@ import {
 } from './request.js';
 import { jwtDecode } from 'jwt-decode';
 import { generateSync } from 'otplib';
+import { redactSensitive } from './utils.js';
 
 const USER_PREFIX = 'User:';
 /** Credentials stored in config.json */
@@ -120,12 +121,18 @@ export class SmartRentAuthClient {
    * @returns SmartRent response data payload
    */
   private _handleResponse(response: AxiosResponse) {
-    this.log.debug('Response:', JSON.stringify(response.data, null, 2));
+    this.log.debug(
+      'Response:',
+      JSON.stringify(redactSensitive(response.data), null, 2)
+    );
     return response;
   }
 
   private _handleRequest(config: InternalAxiosRequestConfig) {
-    this.log.debug('Request:', JSON.stringify(config, null, 2));
+    this.log.debug(
+      'Request:',
+      JSON.stringify(redactSensitive(config), null, 2)
+    );
     return config;
   }
 
@@ -161,6 +168,9 @@ export class SmartRentAuthClient {
           'utf8'
         );
         this.session = JSON.parse(sessionString) as Session;
+        // Lock down session files left over from before owner-only
+        // permissions were enforced on write.
+        await this._chmodSessionFile();
       } catch (err) {
         this.log.error('Error reading saved session', err);
         await fsPromises.rm(this.sessionPath);
@@ -168,6 +178,19 @@ export class SmartRentAuthClient {
       }
     } else if (!existsSync(this.pluginPath)) {
       await fsPromises.mkdir(this.pluginPath);
+    }
+  }
+
+  /**
+   * Best-effort restriction of the session file to owner-only permissions.
+   * Not fatal: some platforms/filesystems (e.g. Windows, some network
+   * filesystems) don't support POSIX permission bits.
+   */
+  private async _chmodSessionFile() {
+    try {
+      await fsPromises.chmod(this.sessionPath, 0o600);
+    } catch (err) {
+      this.log.debug('Could not restrict session file permissions', err);
     }
   }
 
@@ -190,9 +213,7 @@ export class SmartRentAuthClient {
     };
 
     this.log.info(`${refreshed ? 'Refreshed' : 'Started'} SmartRent session`);
-    const sessionStr = JSON.stringify(this.session, null, 2);
-    await fsPromises.writeFile(this.sessionPath, sessionStr);
-    this.log.debug('Saved session to', this.sessionPath);
+    await this._writeSessionFile();
     return this.session;
   }
 
@@ -204,10 +225,19 @@ export class SmartRentAuthClient {
       webSocketToken: data,
       websocketExpires: SmartRentAuthClient._getExpireDate(exp),
     };
-    const sessionStr = JSON.stringify(this.session, null, 2);
-    await fsPromises.writeFile(this.sessionPath, sessionStr);
-    this.log.debug('Saved session to', this.sessionPath);
+    await this._writeSessionFile();
     return this.session;
+  }
+
+  /**
+   * Persist the current session to disk with owner-only permissions, since it
+   * contains a live SmartRent access token.
+   */
+  private async _writeSessionFile() {
+    const sessionStr = JSON.stringify(this.session, null, 2);
+    await fsPromises.writeFile(this.sessionPath, sessionStr, { mode: 0o600 });
+    await this._chmodSessionFile();
+    this.log.debug('Saved session to', this.sessionPath);
   }
 
   /**
@@ -242,7 +272,7 @@ export class SmartRentAuthClient {
       return this._storeSession(sessionData);
     }
 
-    this.log.debug('Session data:', sessionData);
+    this.log.debug('Session data:', redactSensitive(sessionData));
     // If 2FA is enabled, start a 2FA session
     if (SmartRentAuthClient._isTfaSession(sessionData)) {
       this.log.debug('2FA enabled');
