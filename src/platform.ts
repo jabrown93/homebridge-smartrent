@@ -5,6 +5,7 @@ import {
   SmartRentAccessory,
   LockAccessory,
   LeakSensorAccessory,
+  MotionSensorAccessory,
   SwitchAccessory,
   ThermostatAccessory,
   SwitchMultilevelAccessory,
@@ -62,6 +63,7 @@ export class SmartRentPlatform implements DynamicPlatformPlugin {
     let Accessory:
       | typeof LeakSensorAccessory
       | typeof LockAccessory
+      | typeof MotionSensorAccessory
       | typeof SwitchAccessory
       | typeof ThermostatAccessory
       | typeof SwitchMultilevelAccessory;
@@ -80,6 +82,12 @@ export class SmartRentPlatform implements DynamicPlatformPlugin {
       this.config.enableLeakSensors
     ) {
       Accessory = LeakSensorAccessory;
+    } else if (
+      type === 'sensor_notification' &&
+      attributeNames.includes('motion_binary') &&
+      this.config.enableMotionSensors
+    ) {
+      Accessory = MotionSensorAccessory;
     } else if (type === 'entry_control' && this.config.enableLocks) {
       Accessory = LockAccessory;
     } else if (type === 'switch_binary' && this.config.enableSwitches) {

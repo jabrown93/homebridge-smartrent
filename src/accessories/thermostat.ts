@@ -6,6 +6,7 @@ import {
   ThermostatData,
   ThermostatFanMode,
   ThermostatMode,
+  ThermostatOperatingState,
 } from '../devices/index.js';
 import { WSEvent } from '../lib/client.js';
 import { findStateByName } from '../lib/utils.js';
@@ -198,6 +199,9 @@ export class ThermostatAccessory {
       case 'mode':
         this.handleModeChange(event);
         break;
+      case 'operating_state':
+        this.handleOperatingStateChange(event);
+        break;
       case 'cooling_setpoint':
         this.handleCoolingSetpointChange(event);
         break;
@@ -296,6 +300,17 @@ export class ThermostatAccessory {
     );
   }
 
+  private handleOperatingStateChange(event: WSEvent) {
+    const operatingState = this.toCurrentHeatingCoolingStateFromOperatingState(
+      event.last_read_state as ThermostatOperatingState
+    );
+    this.state.heating_cooling_state.current = operatingState;
+    this.thermostatService.updateCharacteristic(
+      this.platform.api.hap.Characteristic.CurrentHeatingCoolingState,
+      operatingState
+    );
+  }
+
   private handleFanModeChange(event: WSEvent) {
     const fanMode = this.toFanOnCharacteristic(
       event.last_read_state as ThermostatFanMode
@@ -317,6 +332,25 @@ export class ThermostatAccessory {
       case 'heat':
         return this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
           .HEAT;
+      case 'off':
+      default:
+        return this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
+          .OFF;
+    }
+  }
+
+  private toCurrentHeatingCoolingStateFromOperatingState(
+    operatingState?: ThermostatOperatingState | string | null
+  ) {
+    switch (operatingState) {
+      case 'cooling':
+        return this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
+          .COOL;
+      case 'heating':
+        return this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
+          .HEAT;
+      case 'fan_only':
+      case 'idle':
       case 'off':
       default:
         return this.platform.api.hap.Characteristic.CurrentHeatingCoolingState
@@ -390,7 +424,7 @@ export class ThermostatAccessory {
     temperature: number
   ): DeviceAttribute[] {
     const target_temp = this.fromTemperatureCharacteristic(temperature);
-    switch (this.state.heating_cooling_state.current) {
+    switch (this.state.heating_cooling_state.target) {
       case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.OFF:
       case this.platform.api.hap.Characteristic.TargetHeatingCoolingState.COOL:
         return [{ name: 'cool_target_temp', state: target_temp }];
@@ -447,9 +481,16 @@ export class ThermostatAccessory {
       this.state.deviceId
     );
 
-    const currentValue = this.toCurrentHeatingCoolingStateCharacteristic(
-      findStateByName(thermostatAttributes, 'mode') as ThermostatMode
-    );
+    const operatingState = findStateByName(
+      thermostatAttributes,
+      'operating_state'
+    ) as ThermostatOperatingState | null;
+    const currentValue =
+      operatingState !== null
+        ? this.toCurrentHeatingCoolingStateFromOperatingState(operatingState)
+        : this.toCurrentHeatingCoolingStateCharacteristic(
+            findStateByName(thermostatAttributes, 'mode') as ThermostatMode
+        );
     this.state.heating_cooling_state.current = currentValue;
     return currentValue;
   }
@@ -468,7 +509,7 @@ export class ThermostatAccessory {
     const currentValue = this.toTargetHeatingCoolingStateCharacteristic(
       findStateByName(thermostatAttributes, 'mode') as ThermostatMode
     );
-    this.state.heating_cooling_state.current = currentValue;
+    this.state.heating_cooling_state.target = currentValue;
     return currentValue;
   }
 
@@ -486,7 +527,7 @@ export class ThermostatAccessory {
         this.state.deviceId,
         newAttributes
       );
-    this.state.heating_cooling_state.current =
+    this.state.heating_cooling_state.target =
       this.toTargetHeatingCoolingStateCharacteristic(
         findStateByName(thermostatAttributes, 'mode') as ThermostatMode
       );
@@ -622,7 +663,7 @@ export class ThermostatAccessory {
         newAttributes
       );
 
-    this.state.heating_threshold_temperature.current =
+    this.state.cooling_threshold_temperature.current =
       this.toTemperatureCharacteristic(
         findStateByName(thermostatAttributes, 'cool_target_temp') as number
       );
