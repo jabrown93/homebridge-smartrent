@@ -102,8 +102,6 @@ export class SmartRentApi {
     const devices = await this.client.get<Array<DeviceDataUnion>>(
       `/hubs/${hubId}/devices`
     );
-    this.platform.log.info('Devices Found: ', devices);
-
     if (devices.length) {
       this.platform.log.info(`Found ${devices.length} devices`);
     } else {
