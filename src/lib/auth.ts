@@ -168,6 +168,9 @@ export class SmartRentAuthClient {
           'utf8'
         );
         this.session = JSON.parse(sessionString) as Session;
+        // Lock down session files left over from before owner-only
+        // permissions were enforced on write.
+        await this._chmodSessionFile();
       } catch (err) {
         this.log.error('Error reading saved session', err);
         await fsPromises.rm(this.sessionPath);
@@ -175,6 +178,19 @@ export class SmartRentAuthClient {
       }
     } else if (!existsSync(this.pluginPath)) {
       await fsPromises.mkdir(this.pluginPath);
+    }
+  }
+
+  /**
+   * Best-effort restriction of the session file to owner-only permissions.
+   * Not fatal: some platforms/filesystems (e.g. Windows, some network
+   * filesystems) don't support POSIX permission bits.
+   */
+  private async _chmodSessionFile() {
+    try {
+      await fsPromises.chmod(this.sessionPath, 0o600);
+    } catch (err) {
+      this.log.debug('Could not restrict session file permissions', err);
     }
   }
 
@@ -220,7 +236,7 @@ export class SmartRentAuthClient {
   private async _writeSessionFile() {
     const sessionStr = JSON.stringify(this.session, null, 2);
     await fsPromises.writeFile(this.sessionPath, sessionStr, { mode: 0o600 });
-    await fsPromises.chmod(this.sessionPath, 0o600);
+    await this._chmodSessionFile();
     this.log.debug('Saved session to', this.sessionPath);
   }
 
