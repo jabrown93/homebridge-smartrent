@@ -206,9 +206,13 @@ export class LockAccessory {
       value === this.platform.api.hap.Characteristic.LockTargetState.UNSECURED
     ) {
       // The unlock has now actually been applied, superseding any relock
-      // still queued from before it. Arm-only (rule 1): if a timer is
-      // already running it stays, preserving its earlier deadline.
+      // still queued from before it. Restart the timer: the issue-time
+      // deadline may be nearly spent if this unlock sat behind a slow write,
+      // and the door deserves the full delay from the moment it actually
+      // unlocked. Safe from indefinite postponement — this runs only when a
+      // queued unlock applies, never on observations.
       this.autoLockGeneration++;
+      this._cancelAutoLock();
       this._armAutoLock();
     }
     this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
@@ -236,7 +240,7 @@ export class LockAccessory {
 
   private _cancelAutoLock() {
     if (this.relockTimer) {
-      this.platform.log.debug('Lock is locked, clearing timer');
+      this.platform.log.debug('Clearing auto-relock timer');
       clearTimeout(this.relockTimer);
       this.relockTimer = undefined;
     }
