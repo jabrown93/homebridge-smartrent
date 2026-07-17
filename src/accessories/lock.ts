@@ -15,6 +15,7 @@ export class LockAccessory {
   private readonly battery: Service;
   private timer?: NodeJS.Timeout;
   private timerSet: boolean = false;
+  private writeQueue: Promise<unknown> = Promise.resolve();
 
   private readonly state: {
     hubId: string;
@@ -134,8 +135,8 @@ export class LockAccessory {
       this.state.hubId,
       this.state.deviceId
     );
-    const locked = findStateByName(lockAttributes, this.LOCKED) as boolean;
-    return locked
+    const locked = findStateByName(lockAttributes, this.LOCKED) as string;
+    return locked === 'true'
       ? this.platform.api.hap.Characteristic.LockTargetState.SECURED
       : this.platform.api.hap.Characteristic.LockTargetState.UNSECURED;
   }
@@ -144,6 +145,19 @@ export class LockAccessory {
    * Handle requests to set the "Lock Target State" characteristic
    */
   async handleLockTargetStateSet(value: CharacteristicValue) {
+    // Chained so at most one setState PATCH for this lock is ever in flight.
+    // That guarantees requests reach the hub in the order they were issued,
+    // so the *last* command to complete is always the *last* one issued —
+    // no sequence-number bookkeeping needed to guard against out-of-order
+    // completions arming/clearing the auto-lock timer incorrectly.
+    const result = this.writeQueue
+      .catch(() => undefined)
+      .then(() => this._setLockTargetState(value));
+    this.writeQueue = result;
+    return result;
+  }
+
+  private async _setLockTargetState(value: CharacteristicValue) {
     this.platform.log.debug('Triggered SET LockTargetState:', value);
     this.state.locked.target = value;
     const attributes = [{ name: this.LOCKED, state: !!value }];
@@ -153,7 +167,6 @@ export class LockAccessory {
       attributes
     );
     this.scheduleAutoLock(value);
-
     this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
   }
 
@@ -175,9 +188,14 @@ export class LockAccessory {
       this.timerSet = true;
       this.timer = setTimeout(
         async () => {
-          this.platform.log.debug('Relocking lock');
-          await this.handleLockTargetStateSet(true);
-          this.timerSet = false;
+          try {
+            this.platform.log.debug('Relocking lock');
+            await this.handleLockTargetStateSet(true);
+          } catch (err) {
+            this.platform.log.error('Failed to auto-relock', err);
+          } finally {
+            this.timerSet = false;
+          }
         },
         this.platform.config.autoLockDelayInMinutes * 60 * 1000
       );

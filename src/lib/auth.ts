@@ -379,7 +379,10 @@ export class SmartRentAuthClient {
         this.log.error(`Failed to ${action}`);
       }
     } else {
-      this.log.error(`Unknown error while attempting to ${action}`, error);
+      const detail = axiosError.code
+        ? `${axiosError.code}: ${axiosError.message}`
+        : axiosError.message;
+      this.log.error(`Unknown error while attempting to ${action}: ${detail}`);
     }
   }
 
