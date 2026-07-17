@@ -143,6 +143,158 @@ describe('LockAccessory', () => {
     expect(platform.smartRentApi.setState).toHaveBeenCalledTimes(1);
   });
 
+  describe('auto-relock races', () => {
+    const DELAY_MINUTES = 5;
+    const DELAY = DELAY_MINUTES * 60 * 1000;
+
+    /** Rebuilds the accessory on a platform with auto-lock switched on. */
+    function withAutoLock() {
+      platform = createMockPlatform({
+        enableAutoLock: true,
+        autoLockDelayInMinutes: DELAY_MINUTES,
+      });
+      accessory = createMockAccessory(lockDevice());
+      lockAccessory = new LockAccessory(platform, accessory);
+    }
+
+    /**
+     * Records every PATCH with the (fake) clock time it was issued at, and
+     * lets one relock PATCH be held pending. The real REST client sets no
+     * axios timeout, so a relock genuinely can stay in flight past the
+     * auto-lock delay.
+     */
+    function recordSetState() {
+      const calls: { locked: boolean; at: number }[] = [];
+      let release!: () => void;
+      const pending = new Promise<void>(resolve => (release = resolve));
+      let held = false;
+
+      const holdNextRelock = (andThenFail = false) => {
+        platform.smartRentApi.setState.mockImplementation(
+          async (_hub: string, _dev: string, attrs: { state: unknown }[]) => {
+            const locked = attrs[0].state as boolean;
+            calls.push({ locked, at: Date.now() });
+            if (locked && !held) {
+              held = true;
+              await pending;
+              if (andThenFail) {
+                throw new Error('transient SmartRent outage');
+              }
+            }
+            return attributes(['locked', String(locked)]);
+          }
+        );
+      };
+
+      return { calls, release: () => release(), holdNextRelock };
+    }
+
+    it('honors a full delay from the latest unlock when a relock is still in flight', async () => {
+      vi.useFakeTimers();
+      withAutoLock();
+      const { calls, release, holdNextRelock } = recordSetState();
+      holdNextRelock();
+
+      // Unlock, then let the auto-relock fire. Its PATCH hangs.
+      await lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+      await vi.advanceTimersByTimeAsync(DELAY);
+
+      // The user unlocks again -- queued behind the hung relock -- and the hub
+      // pushes an event confirming the door is still open.
+      const queuedUnlock = lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+      lockAccessory.handleLockEvent({
+        name: 'locked',
+        last_read_state: 'false',
+      } as never);
+
+      // That event arms a fresh timer, which also fires while the first relock
+      // is still hung, queueing a second relock behind the user's unlock.
+      await vi.advanceTimersByTimeAsync(DELAY);
+
+      release();
+      await queuedUnlock;
+      await vi.advanceTimersByTimeAsync(0);
+
+      // The superseded relock must not apply on the heels of the unlock...
+      const lastUnlock = calls.map(c => c.locked).lastIndexOf(false);
+      expect(lastUnlock).toBeGreaterThan(-1);
+      expect(calls.slice(lastUnlock + 1)).toEqual([]);
+
+      // ...but the door must still relock, a full delay later.
+      await vi.advanceTimersByTimeAsync(DELAY);
+      const relock = calls.slice(lastUnlock + 1).find(c => c.locked);
+      expect(relock).toBeDefined();
+      expect(relock!.at - calls[lastUnlock].at).toBeGreaterThanOrEqual(DELAY);
+    });
+
+    it('still relocks when an unlock event arrives while a relock is pending and that relock then fails', async () => {
+      vi.useFakeTimers();
+      withAutoLock();
+      const { calls, release, holdNextRelock } = recordSetState();
+      holdNextRelock(true);
+
+      await lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+      await vi.advanceTimersByTimeAsync(DELAY);
+
+      // Door reported still unlocked *while* the relock is in flight. Holding
+      // the "timer armed" flag across that window would swallow this event.
+      lockAccessory.handleLockEvent({
+        name: 'locked',
+        last_read_state: 'false',
+      } as never);
+
+      release();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(calls.filter(c => c.locked)).toHaveLength(1); // the failed one
+
+      await vi.advanceTimersByTimeAsync(DELAY);
+      expect(calls.filter(c => c.locked)).toHaveLength(2); // retried, not stuck
+    });
+
+    it('does not leave a failed auto-relock as an unhandled rejection', async () => {
+      vi.useFakeTimers();
+      withAutoLock();
+      platform.smartRentApi.setState
+        .mockResolvedValueOnce(attributes(['locked', 'false']))
+        .mockRejectedValueOnce(new Error('transient SmartRent outage'));
+
+      await lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+      await expect(vi.advanceTimersByTimeAsync(DELAY)).resolves.not.toThrow();
+      expect(platform.log.error).toHaveBeenCalledWith(
+        'Failed to auto-relock',
+        expect.any(Error)
+      );
+    });
+
+    it('a websocket lock event cancels a pending auto-relock', async () => {
+      vi.useFakeTimers();
+      withAutoLock();
+      platform.smartRentApi.setState.mockResolvedValue(
+        attributes(['locked', 'false'])
+      );
+
+      await lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+      // Someone locks the door by hand before the timer fires.
+      lockAccessory.handleLockEvent({
+        name: 'locked',
+        last_read_state: 'true',
+      } as never);
+      await vi.advanceTimersByTimeAsync(DELAY);
+
+      expect(platform.smartRentApi.setState).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('a websocket lock event updates both Lock characteristics', () => {
     const service = accessory.getService(Service.LockMechanism)!;
     lockAccessory.handleLockEvent({
