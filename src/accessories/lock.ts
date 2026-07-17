@@ -259,8 +259,12 @@ export class LockAccessory {
       );
     }).catch(err => {
       this.platform.log.error('Failed to auto-relock', err);
-      // The door is presumably still unlocked; retry after another delay.
-      this._armAutoLock();
+      // Retry only if nothing fresher arrived while the PATCH was in flight;
+      // an observation or applied unlock advances the generation and owns the
+      // timer from then on (e.g. the door was seen locked despite the error).
+      if (generation === this.autoLockGeneration) {
+        this._armAutoLock();
+      }
     });
   }
 
