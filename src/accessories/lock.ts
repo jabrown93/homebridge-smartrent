@@ -15,8 +15,7 @@ export class LockAccessory {
   private readonly battery: Service;
   private timer?: NodeJS.Timeout;
   private timerSet: boolean = false;
-  private commandSeq = 0;
-  private lastAppliedSeq = 0;
+  private writeQueue: Promise<unknown> = Promise.resolve();
 
   private readonly state: {
     hubId: string;
@@ -146,8 +145,20 @@ export class LockAccessory {
    * Handle requests to set the "Lock Target State" characteristic
    */
   async handleLockTargetStateSet(value: CharacteristicValue) {
+    // Chained so at most one setState PATCH for this lock is ever in flight.
+    // That guarantees requests reach the hub in the order they were issued,
+    // so the *last* command to complete is always the *last* one issued —
+    // no sequence-number bookkeeping needed to guard against out-of-order
+    // completions arming/clearing the auto-lock timer incorrectly.
+    const result = this.writeQueue
+      .catch(() => undefined)
+      .then(() => this._setLockTargetState(value));
+    this.writeQueue = result;
+    return result;
+  }
+
+  private async _setLockTargetState(value: CharacteristicValue) {
     this.platform.log.debug('Triggered SET LockTargetState:', value);
-    const seq = ++this.commandSeq;
     this.state.locked.target = value;
     const attributes = [{ name: this.LOCKED, state: !!value }];
     const lockAttributes = await this.platform.smartRentApi.setState<LockData>(
@@ -155,15 +166,7 @@ export class LockAccessory {
       this.state.deviceId,
       attributes
     );
-    // Keyed off the last command that actually reached the lock, not the last
-    // one issued: a stale completion must not undo a newer command's effect,
-    // but a newer command that *failed* changed nothing, so an older
-    // completion still has to arm the auto-lock timer.
-    if (seq > this.lastAppliedSeq) {
-      this.lastAppliedSeq = seq;
-      this.scheduleAutoLock(value);
-    }
-
+    this.scheduleAutoLock(value);
     this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
   }
 
