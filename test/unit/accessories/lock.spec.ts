@@ -274,6 +274,71 @@ describe('LockAccessory', () => {
       );
     });
 
+    it('still relocks when a second explicit unlock arrives while a timer is armed', async () => {
+      vi.useFakeTimers();
+      withAutoLock();
+      platform.smartRentApi.setState.mockResolvedValue(
+        attributes(['locked', 'false'])
+      );
+
+      await lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+      // A second unlock while the first one's timer is still armed. Nothing
+      // re-arms here (scheduleAutoLock keeps the existing timer), so the
+      // already-armed timer stays responsible for relocking.
+      await lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+      expect(platform.smartRentApi.setState).toHaveBeenCalledTimes(2);
+
+      platform.smartRentApi.setState.mockResolvedValue(
+        attributes(['locked', 'true'])
+      );
+      await vi.advanceTimersByTimeAsync(DELAY);
+
+      expect(platform.smartRentApi.setState).toHaveBeenCalledTimes(3);
+      expect(platform.smartRentApi.setState).toHaveBeenLastCalledWith(
+        '42',
+        '103',
+        [{ name: 'locked', state: true }]
+      );
+    });
+
+    it('keeps the armed relock when an explicit lock command fails', async () => {
+      vi.useFakeTimers();
+      withAutoLock();
+      platform.smartRentApi.setState.mockResolvedValueOnce(
+        attributes(['locked', 'false'])
+      );
+      await lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+
+      // An explicit lock that never reaches the hub must not cancel the relock
+      // it failed to make redundant -- the door is still open.
+      platform.smartRentApi.setState.mockRejectedValueOnce(
+        new Error('network error')
+      );
+      await expect(
+        lockAccessory.handleLockTargetStateSet(
+          Characteristic.LockTargetState.SECURED
+        )
+      ).rejects.toThrow('network error');
+
+      platform.smartRentApi.setState.mockResolvedValueOnce(
+        attributes(['locked', 'true'])
+      );
+      await vi.advanceTimersByTimeAsync(DELAY);
+
+      expect(platform.smartRentApi.setState).toHaveBeenCalledTimes(3);
+      expect(platform.smartRentApi.setState).toHaveBeenLastCalledWith(
+        '42',
+        '103',
+        [{ name: 'locked', state: true }]
+      );
+    });
+
     it('a websocket lock event cancels a pending auto-relock', async () => {
       vi.useFakeTimers();
       withAutoLock();

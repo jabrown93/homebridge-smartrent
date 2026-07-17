@@ -17,12 +17,12 @@ export class LockAccessory {
   private timerSet: boolean = false;
   private writeQueue: Promise<unknown> = Promise.resolve();
   /**
-   * Identifies the current auto-lock intention. Bumped whenever that
-   * intention changes: a new relock timer is armed, the lock is observed or
-   * commanded locked, or the user issues an explicit command. A relock
-   * captures this at arm time and re-checks it once it reaches the front of
-   * the write queue — if it no longer matches, something newer superseded it
-   * and it must not run.
+   * Identifies the current auto-lock intention. Only scheduleAutoLock changes
+   * it, and only when it has actually established a new intention (armed a
+   * timer) or cancelled one (the lock is locked) — so a bump always leaves
+   * behind a correct successor. A relock captures this when its timer is armed
+   * and re-checks it once it reaches the front of the write queue; if it no
+   * longer matches, something newer superseded it and it must not run.
    */
   private autoLockGeneration: number = 0;
 
@@ -154,8 +154,14 @@ export class LockAccessory {
    * Handle requests to set the "Lock Target State" characteristic
    */
   async handleLockTargetStateSet(value: CharacteristicValue): Promise<void> {
-    // An explicit command supersedes any auto-relock still queued behind it.
-    this.autoLockGeneration++;
+    // Deliberately does not touch autoLockGeneration. Invalidating the current
+    // intention here would strand an already-armed timer: this command's own
+    // scheduleAutoLock is not guaranteed to replace it — it early-returns when
+    // a timer is already armed, and never runs at all if the PATCH throws — so
+    // the armed timer would fire, see a generation it no longer matches, and
+    // skip, leaving an unlocked door with nothing scheduled. Only
+    // scheduleAutoLock bumps the generation, and only when it has actually
+    // established or cancelled an intention.
     await this._enqueue(() => this._setLockTargetState(value));
   }
 
