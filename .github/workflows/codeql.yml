@@ -9,7 +9,7 @@ on:
     - cron: '25 22 * * 5'
 jobs:
   analyze:
-    uses: jabrown93/.github/.github/workflows/codeql.yml@0bf454f053aea7af353980597006ec03b3ca9870 # v1.4.0
+    uses: jabrown93/.github/.github/workflows/codeql.yml@644b89511f2e5143fb600246050eaf3aa5f532eb # v1.5.0
     permissions:
       security-events: write
       packages: read
