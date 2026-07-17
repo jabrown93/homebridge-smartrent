@@ -16,6 +16,15 @@ export class LockAccessory {
   private timer?: NodeJS.Timeout;
   private timerSet: boolean = false;
   private writeQueue: Promise<unknown> = Promise.resolve();
+  /**
+   * Identifies the current auto-lock intention. Bumped whenever that
+   * intention changes: a new relock timer is armed, the lock is observed or
+   * commanded locked, or the user issues an explicit command. A relock
+   * captures this at arm time and re-checks it once it reaches the front of
+   * the write queue — if it no longer matches, something newer superseded it
+   * and it must not run.
+   */
+  private autoLockGeneration: number = 0;
 
   private readonly state: {
     hubId: string;
@@ -144,15 +153,19 @@ export class LockAccessory {
   /**
    * Handle requests to set the "Lock Target State" characteristic
    */
-  async handleLockTargetStateSet(value: CharacteristicValue) {
-    // Chained so at most one setState PATCH for this lock is ever in flight.
-    // That guarantees requests reach the hub in the order they were issued,
-    // so the *last* command to complete is always the *last* one issued —
-    // no sequence-number bookkeeping needed to guard against out-of-order
-    // completions arming/clearing the auto-lock timer incorrectly.
-    const result = this.writeQueue
-      .catch(() => undefined)
-      .then(() => this._setLockTargetState(value));
+  async handleLockTargetStateSet(value: CharacteristicValue): Promise<void> {
+    // An explicit command supersedes any auto-relock still queued behind it.
+    this.autoLockGeneration++;
+    await this._enqueue(() => this._setLockTargetState(value));
+  }
+
+  /**
+   * Chain onto the write queue so at most one setState PATCH for this lock is
+   * ever in flight. That guarantees requests reach the hub in the order they
+   * were issued, so completion order matches issue order by construction.
+   */
+  private _enqueue(command: () => Promise<unknown>) {
+    const result = this.writeQueue.catch(() => undefined).then(command);
     this.writeQueue = result;
     return result;
   }
@@ -186,31 +199,44 @@ export class LockAccessory {
         ' minutes'
       );
       this.timerSet = true;
+      const generation = ++this.autoLockGeneration;
       this.timer = setTimeout(
         async () => {
-          // Reset before enqueueing the relock command, not after it
-          // resolves: handleLockTargetStateSet chains through writeQueue, so
-          // if other commands are already queued ahead of it, the relock
-          // call can sit pending for a while. timerSet must reflect "is a
-          // future timer armed" (false, it already fired) rather than "is a
-          // relock operation outstanding" — otherwise a fresh unlock that
-          // arrives during that window sees a stale timerSet=true and
-          // skips arming a new timer, leaving the door unlocked with no
-          // auto-relock scheduled.
+          // timerSet tracks "is a future timer armed", so clear it the moment
+          // this one fires rather than when the relock finishes. The relock
+          // waits on writeQueue and can stay pending well past its own delay
+          // (setState has no timeout), and holding the flag across that window
+          // would make a fresh unlock skip arming its timer and leave the door
+          // unlocked with nothing scheduled. Enqueueing a relock is never a
+          // reason to refuse to arm the next timer; `generation` — not
+          // timerSet — is what keeps a superseded relock from applying.
           this.timerSet = false;
           try {
-            this.platform.log.debug('Relocking lock');
-            await this.handleLockTargetStateSet(true);
+            await this._enqueue(async () => {
+              if (generation !== this.autoLockGeneration) {
+                this.platform.log.debug(
+                  'Auto-relock superseded before it ran, skipping'
+                );
+                return;
+              }
+              this.platform.log.debug('Relocking lock');
+              return this._setLockTargetState(true);
+            });
           } catch (err) {
             this.platform.log.error('Failed to auto-relock', err);
           }
         },
         this.platform.config.autoLockDelayInMinutes * 60 * 1000
       );
-    } else if (this.timer) {
-      this.platform.log.debug('Lock is locked, clearing timer');
-      clearTimeout(this.timer);
+    } else {
+      if (this.timer) {
+        this.platform.log.debug('Lock is locked, clearing timer');
+        clearTimeout(this.timer);
+        this.timer = undefined;
+      }
       this.timerSet = false;
+      // The lock is locked, so any relock still queued is obsolete.
+      this.autoLockGeneration++;
     }
   }
 
