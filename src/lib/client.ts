@@ -156,6 +156,7 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
   public wsClient: Promise<WebSocket>;
   public event: object;
   private readonly devices: number[];
+  private reconnectAttempts = 0;
 
   constructor(readonly platform: SmartRentPlatform) {
     super(platform);
@@ -212,34 +213,49 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
 
   private _handleWsOpen() {
     this.log.debug('WebSocket connection opened');
+    this.reconnectAttempts = 0;
     this.devices.forEach(device => this.subscribeDevice(device));
   }
 
   private _handleWsMessage(message: WebSocket.MessageEvent) {
-    this.log.debug(`WebSocket message received: Data: ${message.data}`);
-    const data: WSPayload = JSON.parse(String(message.data));
-    if (data[3].includes('attribute_state')) {
-      const device = data[2].split(':')[1];
-      this.log.debug(String(data[4]));
-      this.event[device](data[4]);
+    try {
+      this.log.debug(`WebSocket message received: Data: ${message.data}`);
+      const data: WSPayload = JSON.parse(String(message.data));
+      if (
+        Array.isArray(data) &&
+        typeof data[3] === 'string' &&
+        data[3].includes('attribute_state')
+      ) {
+        const device = String(data[2]).split(':')[1];
+        const handler = this.event[device];
+        if (typeof handler === 'function') {
+          this.log.debug(String(data[4]));
+          handler(data[4]);
+        }
+      }
+    } catch (err) {
+      this.log.debug('Ignoring malformed WebSocket frame', err);
     }
   }
 
   private _handleWsError(error: WebSocket.ErrorEvent) {
     this.log.error(`WebSocket error: ${error.message}`);
-    this.wsClient
-      .then(client => client.close())
-      .then(() => this._initializeWsClient);
+    // Closing here triggers the 'close' event, which _handleWsClose uses to
+    // reconnect (with backoff) — don't reconnect a second time here too.
+    this.wsClient.then(client => client.close());
   }
 
   private _handleWsClose(event: WebSocket.CloseEvent) {
     this.log.debug(
-      `WebSocket connection closed: Code: ${event.code}, Reason: ${
-        event.reason
-      }, Event: ${event}`,
-      event
+      `WebSocket connection closed: Code: ${event.code}, Reason: ${event.reason}`
     );
-    this.wsClient = this._initializeWsClient();
+    const delay =
+      Math.min(30000, 1000 * 2 ** this.reconnectAttempts) +
+      Math.random() * 1000;
+    this.reconnectAttempts++;
+    setTimeout(() => {
+      this.wsClient = this._initializeWsClient();
+    }, delay);
   }
 
   /**
