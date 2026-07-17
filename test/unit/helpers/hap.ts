@@ -172,8 +172,13 @@ export function createMockPlatform(
         Service,
         uuid: { generate: vi.fn((seed: string) => `uuid-${seed}`) },
       },
+      serverVersion: '2.1.1',
       on: vi.fn(),
       user: { storagePath: vi.fn(() => '/fake/storage') },
+      // Must stay a `function` expression, not an arrow function: platform.ts
+      // calls this via `new this.api.platformAccessory(...)`, and arrow
+      // functions can't be used as constructors.
+      // eslint-disable-next-line prefer-arrow-callback
       platformAccessory: vi.fn().mockImplementation(function (
         name: string,
         uuid: string
