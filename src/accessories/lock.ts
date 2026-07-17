@@ -188,13 +188,21 @@ export class LockAccessory {
       this.timerSet = true;
       this.timer = setTimeout(
         async () => {
+          // Reset before enqueueing the relock command, not after it
+          // resolves: handleLockTargetStateSet chains through writeQueue, so
+          // if other commands are already queued ahead of it, the relock
+          // call can sit pending for a while. timerSet must reflect "is a
+          // future timer armed" (false, it already fired) rather than "is a
+          // relock operation outstanding" — otherwise a fresh unlock that
+          // arrives during that window sees a stale timerSet=true and
+          // skips arming a new timer, leaving the door unlocked with no
+          // auto-relock scheduled.
+          this.timerSet = false;
           try {
             this.platform.log.debug('Relocking lock');
             await this.handleLockTargetStateSet(true);
           } catch (err) {
             this.platform.log.error('Failed to auto-relock', err);
-          } finally {
-            this.timerSet = false;
           }
         },
         this.platform.config.autoLockDelayInMinutes * 60 * 1000
