@@ -197,20 +197,25 @@ export class LockAccessory {
     this.platform.log.debug('Triggered SET LockTargetState:', value);
     this.state.locked.target = value;
     const attributes = [{ name: this.LOCKED, state: !!value }];
+    const generation = this.autoLockGeneration;
     const lockAttributes = await this.platform.smartRentApi.setState<LockData>(
       this.state.hubId,
       this.state.deviceId,
       attributes
     );
     if (
-      value === this.platform.api.hap.Characteristic.LockTargetState.UNSECURED
+      value ===
+        this.platform.api.hap.Characteristic.LockTargetState.UNSECURED &&
+      generation === this.autoLockGeneration
     ) {
       // The unlock has now actually been applied, superseding any relock
       // still queued from before it. Restart the timer: the issue-time
       // deadline may be nearly spent if this unlock sat behind a slow write,
       // and the door deserves the full delay from the moment it actually
-      // unlocked. Safe from indefinite postponement — this runs only when a
-      // queued unlock applies, never on observations.
+      // unlocked. If an observation arrived while the PATCH was in flight
+      // (generation moved), it timed this same unlock more accurately and
+      // owns the timer — restarting from a stale HTTP completion would only
+      // push the deadline later.
       this.autoLockGeneration++;
       this._cancelAutoLock();
       this._armAutoLock();
