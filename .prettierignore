@@ -4,3 +4,4 @@ package-lock.json
 CHANGELOG.md
 CLAUDE.md
 /.claude
+sbom.cdx.json
