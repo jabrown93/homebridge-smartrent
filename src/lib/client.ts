@@ -63,6 +63,9 @@ export class SmartRentApiClient {
     const apiClient = axios.create({
       baseURL: API_URL,
       headers: API_CLIENT_HEADERS,
+      // Bound every request so a hung or slow response can't block the
+      // per-lock write queue or postpone auto-relock past this window.
+      timeout: 30_000,
     });
     apiClient.interceptors.request.use(this._handleRequest.bind(this));
     apiClient.interceptors.response.use(this._handleResponse.bind(this));
