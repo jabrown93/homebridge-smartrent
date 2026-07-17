@@ -15,6 +15,7 @@ export class LockAccessory {
   private readonly battery: Service;
   private timer?: NodeJS.Timeout;
   private timerSet: boolean = false;
+  private commandSeq = 0;
 
   private readonly state: {
     hubId: string;
@@ -134,8 +135,8 @@ export class LockAccessory {
       this.state.hubId,
       this.state.deviceId
     );
-    const locked = findStateByName(lockAttributes, this.LOCKED) as boolean;
-    return locked
+    const locked = findStateByName(lockAttributes, this.LOCKED) as string;
+    return locked === 'true'
       ? this.platform.api.hap.Characteristic.LockTargetState.SECURED
       : this.platform.api.hap.Characteristic.LockTargetState.UNSECURED;
   }
@@ -145,6 +146,7 @@ export class LockAccessory {
    */
   async handleLockTargetStateSet(value: CharacteristicValue) {
     this.platform.log.debug('Triggered SET LockTargetState:', value);
+    const seq = ++this.commandSeq;
     this.state.locked.target = value;
     const attributes = [{ name: this.LOCKED, state: !!value }];
     const lockAttributes = await this.platform.smartRentApi.setState<LockData>(
@@ -152,7 +154,12 @@ export class LockAccessory {
       this.state.deviceId,
       attributes
     );
-    this.scheduleAutoLock(value);
+    // Only the most recently issued command may arm/clear the auto-lock
+    // timer — otherwise a stale completion from an earlier, superseded
+    // command can undo what the latest command just did.
+    if (seq === this.commandSeq) {
+      this.scheduleAutoLock(value);
+    }
 
     this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
   }
@@ -175,9 +182,14 @@ export class LockAccessory {
       this.timerSet = true;
       this.timer = setTimeout(
         async () => {
-          this.platform.log.debug('Relocking lock');
-          await this.handleLockTargetStateSet(true);
-          this.timerSet = false;
+          try {
+            this.platform.log.debug('Relocking lock');
+            await this.handleLockTargetStateSet(true);
+          } catch (err) {
+            this.platform.log.error('Failed to auto-relock', err);
+          } finally {
+            this.timerSet = false;
+          }
         },
         this.platform.config.autoLockDelayInMinutes * 60 * 1000
       );
