@@ -229,7 +229,9 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
     // ~1s, so only reset once the connection has actually stayed open.
     clearTimeout(this.stableTimer);
     this.stableTimer = setTimeout(() => {
-      this.log.debug('WebSocket connection stable, resetting reconnect backoff');
+      this.log.debug(
+        'WebSocket connection stable, resetting reconnect backoff'
+      );
       this.reconnectAttempts = 0;
     }, SmartRentWebsocketClient.CONNECTION_STABLE_MS);
     this.devices.forEach(device => this.subscribeDevice(device));
