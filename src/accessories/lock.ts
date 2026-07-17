@@ -16,6 +16,7 @@ export class LockAccessory {
   private timer?: NodeJS.Timeout;
   private timerSet: boolean = false;
   private commandSeq = 0;
+  private lastAppliedSeq = 0;
 
   private readonly state: {
     hubId: string;
@@ -154,10 +155,12 @@ export class LockAccessory {
       this.state.deviceId,
       attributes
     );
-    // Only the most recently issued command may arm/clear the auto-lock
-    // timer — otherwise a stale completion from an earlier, superseded
-    // command can undo what the latest command just did.
-    if (seq === this.commandSeq) {
+    // Keyed off the last command that actually reached the lock, not the last
+    // one issued: a stale completion must not undo a newer command's effect,
+    // but a newer command that *failed* changed nothing, so an older
+    // completion still has to arm the auto-lock timer.
+    if (seq > this.lastAppliedSeq) {
+      this.lastAppliedSeq = seq;
       this.scheduleAutoLock(value);
     }
 
