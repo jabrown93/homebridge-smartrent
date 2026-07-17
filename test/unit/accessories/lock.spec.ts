@@ -339,6 +339,35 @@ describe('LockAccessory', () => {
       );
     });
 
+    it("a relock completing after a newer websocket unlock keeps that unlock's timer", async () => {
+      vi.useFakeTimers();
+      withAutoLock();
+      const { calls, release, holdNextRelock } = recordSetState();
+      holdNextRelock();
+
+      await lockAccessory.handleLockTargetStateSet(
+        Characteristic.LockTargetState.UNSECURED
+      );
+      // Auto-relock fires; its PATCH hangs in flight.
+      await vi.advanceTimersByTimeAsync(DELAY);
+
+      // The door is unlocked (observed over the independent WS channel) while
+      // the relock's HTTP response is still outstanding. This arms a new
+      // timer, which the relock's late completion must not clobber.
+      lockAccessory.handleLockEvent({
+        name: 'locked',
+        last_read_state: 'false',
+      } as never);
+
+      release();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(calls.filter(c => c.locked)).toHaveLength(1);
+
+      // The newer unlock's timer must still be alive and relock the door.
+      await vi.advanceTimersByTimeAsync(DELAY);
+      expect(calls.filter(c => c.locked)).toHaveLength(2);
+    });
+
     it('a websocket lock event cancels a pending auto-relock', async () => {
       vi.useFakeTimers();
       withAutoLock();

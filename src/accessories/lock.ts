@@ -13,17 +13,34 @@ import { findStateByName } from '../lib/utils.js';
 export class LockAccessory {
   private readonly service: Service;
   private readonly battery: Service;
-  private timer?: NodeJS.Timeout;
-  private timerSet: boolean = false;
   private writeQueue: Promise<unknown> = Promise.resolve();
-  /**
-   * Identifies the current auto-lock intention. Only scheduleAutoLock changes
-   * it, and only when it has actually established a new intention (armed a
-   * timer) or cancelled one (the lock is locked) — so a bump always leaves
-   * behind a correct successor. A relock captures this when its timer is armed
-   * and re-checks it once it reaches the front of the write queue; if it no
-   * longer matches, something newer superseded it and it must not run.
+
+  /*
+   * Auto-lock model. Lock-state information arrives over two channels with no
+   * ordering between them — HTTP command completions and websocket pushes —
+   * plus a relock timer, so nothing learned at a command's *completion* can be
+   * trusted to describe the present. Two rules keep this safe:
+   *
+   * 1. Asymmetry: command paths only ever ensure the relock timer exists
+   *    (_armAutoLock, idempotent); they never cancel or restart it. Only a
+   *    websocket observation of the door being locked cancels it. Arming on
+   *    stale information is harmless — worst case a redundant lock command on
+   *    an already-locked door. Cancelling on stale information is what leaves
+   *    the door unlocked with nothing scheduled.
+   *
+   * 2. autoLockGeneration invalidates relocks that are queued but not yet
+   *    executed. It is bumped only alongside an action that leaves a valid
+   *    successor behind: arming/keeping a timer (an unlock command or
+   *    observation) or observing the door locked (which makes any relock
+   *    moot). The timer captures the generation when it FIRES, not when it is
+   *    armed, so a bump can never strand an armed timer.
+   *
+   * A failed relock re-arms the timer, so relocking retries until the door is
+   * observed locked. An explicit lock command deliberately touches neither the
+   * timer nor the generation: its websocket confirmation cancels the timer,
+   * and if the command fails, the still-armed timer secures the door.
    */
+  private relockTimer?: NodeJS.Timeout;
   private autoLockGeneration: number = 0;
 
   private readonly state: {
@@ -154,14 +171,14 @@ export class LockAccessory {
    * Handle requests to set the "Lock Target State" characteristic
    */
   async handleLockTargetStateSet(value: CharacteristicValue): Promise<void> {
-    // Deliberately does not touch autoLockGeneration. Invalidating the current
-    // intention here would strand an already-armed timer: this command's own
-    // scheduleAutoLock is not guaranteed to replace it — it early-returns when
-    // a timer is already armed, and never runs at all if the PATCH throws — so
-    // the armed timer would fire, see a generation it no longer matches, and
-    // skip, leaving an unlocked door with nothing scheduled. Only
-    // scheduleAutoLock bumps the generation, and only when it has actually
-    // established or cancelled an intention.
+    if (
+      value === this.platform.api.hap.Characteristic.LockTargetState.UNSECURED
+    ) {
+      // Arm at issue time, when this is by definition the newest intention.
+      // If the PATCH later fails the timer just issues a redundant lock.
+      this.autoLockGeneration++;
+      this._armAutoLock();
+    }
     await this._enqueue(() => this._setLockTargetState(value));
   }
 
@@ -185,65 +202,66 @@ export class LockAccessory {
       this.state.deviceId,
       attributes
     );
-    this.scheduleAutoLock(value);
+    if (
+      value === this.platform.api.hap.Characteristic.LockTargetState.UNSECURED
+    ) {
+      // The unlock has now actually been applied, superseding any relock
+      // still queued from before it. Arm-only (rule 1): if a timer is
+      // already running it stays, preserving its earlier deadline.
+      this.autoLockGeneration++;
+      this._armAutoLock();
+    }
     this.platform.log.debug('Completed SET LockTargetState:', lockAttributes);
   }
 
-  private scheduleAutoLock(value: CharacteristicValue) {
+  /** Ensure a relock timer is running. Idempotent; never restarts or cancels. */
+  private _armAutoLock() {
     if (
-      value ===
-        this.platform.api.hap.Characteristic.LockTargetState.UNSECURED &&
-      this.platform.config.enableAutoLock &&
-      this.platform.config.autoLockDelayInMinutes
+      !this.platform.config.enableAutoLock ||
+      !this.platform.config.autoLockDelayInMinutes ||
+      this.relockTimer
     ) {
-      if (this.timerSet) {
+      return;
+    }
+    this.platform.log.debug(
+      'Lock is unlocked, starting timer to relock in ',
+      this.platform.config.autoLockDelayInMinutes,
+      ' minutes'
+    );
+    this.relockTimer = setTimeout(
+      () => this._fireAutoLock(),
+      this.platform.config.autoLockDelayInMinutes * 60 * 1000
+    );
+  }
+
+  private _cancelAutoLock() {
+    if (this.relockTimer) {
+      this.platform.log.debug('Lock is locked, clearing timer');
+      clearTimeout(this.relockTimer);
+      this.relockTimer = undefined;
+    }
+  }
+
+  private _fireAutoLock() {
+    // The timer has fired, so a new one may be armed from here on; whether
+    // *this* relock still applies is the generation check's job, made at the
+    // front of the write queue — the last moment before the PATCH is issued.
+    this.relockTimer = undefined;
+    const generation = this.autoLockGeneration;
+    this._enqueue(async () => {
+      if (generation !== this.autoLockGeneration) {
+        this.platform.log.debug('Auto-relock superseded before it ran');
         return;
       }
-      this.platform.log.debug(
-        'Lock is unlocked, starting timer to relock in ',
-        this.platform.config.autoLockDelayInMinutes,
-        ' minutes'
+      this.platform.log.debug('Relocking lock');
+      await this._setLockTargetState(
+        this.platform.api.hap.Characteristic.LockTargetState.SECURED
       );
-      this.timerSet = true;
-      const generation = ++this.autoLockGeneration;
-      this.timer = setTimeout(
-        async () => {
-          // timerSet tracks "is a future timer armed", so clear it the moment
-          // this one fires rather than when the relock finishes. The relock
-          // waits on writeQueue and can stay pending well past its own delay
-          // (setState has no timeout), and holding the flag across that window
-          // would make a fresh unlock skip arming its timer and leave the door
-          // unlocked with nothing scheduled. Enqueueing a relock is never a
-          // reason to refuse to arm the next timer; `generation` — not
-          // timerSet — is what keeps a superseded relock from applying.
-          this.timerSet = false;
-          try {
-            await this._enqueue(async () => {
-              if (generation !== this.autoLockGeneration) {
-                this.platform.log.debug(
-                  'Auto-relock superseded before it ran, skipping'
-                );
-                return;
-              }
-              this.platform.log.debug('Relocking lock');
-              return this._setLockTargetState(true);
-            });
-          } catch (err) {
-            this.platform.log.error('Failed to auto-relock', err);
-          }
-        },
-        this.platform.config.autoLockDelayInMinutes * 60 * 1000
-      );
-    } else {
-      if (this.timer) {
-        this.platform.log.debug('Lock is locked, clearing timer');
-        clearTimeout(this.timer);
-        this.timer = undefined;
-      }
-      this.timerSet = false;
-      // The lock is locked, so any relock still queued is obsolete.
-      this.autoLockGeneration++;
-    }
+    }).catch(err => {
+      this.platform.log.error('Failed to auto-relock', err);
+      // The door is presumably still unlocked; retry after another delay.
+      this._armAutoLock();
+    });
   }
 
   /**
@@ -267,6 +285,17 @@ export class LockAccessory {
       this.platform.api.hap.Characteristic.LockTargetState,
       currentValue
     );
-    this.scheduleAutoLock(currentValue);
+
+    // An observation is the freshest information there is: it supersedes any
+    // queued relock, and it is the ONE thing allowed to cancel the timer.
+    this.autoLockGeneration++;
+    if (
+      currentValue ===
+      this.platform.api.hap.Characteristic.LockTargetState.UNSECURED
+    ) {
+      this._armAutoLock();
+    } else {
+      this._cancelAutoLock();
+    }
   }
 }
