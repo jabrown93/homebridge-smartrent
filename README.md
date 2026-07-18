@@ -24,6 +24,8 @@ Unofficial [Homebridge](https://homebridge.io) plugin for [SmartRent](https://sm
 
 ## WARNING: This plugin is not actively maintained except for automated dependnecy updates. Issues/bugs are unlikely to be addressed. Use at your own risk
 
+> Homebridge 1.x support is deprecated and will be removed in a future major release — please upgrade to Homebridge 2.x. Requires Node.js `^22.12.0`, `^24.11.0`, or `^26.0.0`.
+
 **Tweaking for my personal use case (problems with refresh token and older APIs), not meant for public use. Use at your own risk. Only tested with locks.**
 
 ## 🔄 Supported Devices
