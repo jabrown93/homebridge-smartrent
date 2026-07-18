@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.3.0...v2.3.1) (2026-07-18)
+
+### Bug Fixes
+
+* **package:** normalize author, eslint ignores, and test naming ([#317](https://github.com/jabrown93/homebridge-smartrent/issues/317)) ([c4f7b46](https://github.com/jabrown93/homebridge-smartrent/commit/c4f7b46d95b612bcc8906b9c258224ea588311ba))
+
 ## [2.3.0](https://github.com/jabrown93/homebridge-smartrent/compare/v2.2.3...v2.3.0) (2026-07-17)
 
 ### Features
