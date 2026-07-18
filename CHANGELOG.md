@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.4.0](https://github.com/jabrown93/homebridge-smartrent/compare/v2.3.1...v2.4.0) (2026-07-18)
+
+### Features
+
+* **engines:** standardize Node engines, CI triggers, and deprecate Homebridge 1.x ([#313](https://github.com/jabrown93/homebridge-smartrent/issues/313)) ([d750301](https://github.com/jabrown93/homebridge-smartrent/commit/d7503016f1256cbdd977a1b39fba715fedb365a6))
+
 ## [2.3.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.3.0...v2.3.1) (2026-07-18)
 
 ### Bug Fixes
