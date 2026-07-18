@@ -4,6 +4,5 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": [".eslintrc.json", "homebridge-ui", "src/**/*.ts"],
-  "exclude": ["**/*.spec.ts"]
+  "include": [".eslintrc.json", "homebridge-ui", "src/**/*.ts"]
 }

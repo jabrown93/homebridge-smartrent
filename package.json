@@ -1,7 +1,7 @@
 {
   "displayName": "SmartRent",
   "name": "@jabrown93/homebridge-smartrent",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Homebridge plugin for SmartRent installations",
   "keywords": [
     "homebridge",
@@ -11,7 +11,11 @@
     "smartrent"
   ],
   "license": "GPL-3.0-or-later",
-  "author": "Jared Brown",
+  "author": {
+    "name": "Jared Brown",
+    "email": "npm@jaredbrown.io",
+    "url": "https://github.com/jabrown93"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jabrown93/homebridge-smartrent.git"
