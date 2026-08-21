@@ -72,7 +72,7 @@
     "@jabrown93/dev-config": "1.1.4",
     "@types/node": "24.13.3",
     "@types/ws": "8.18.1",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "cross-env": "10.1.0",
     "eslint": "10.8.1",
     "homebridge": "2.4.0",
@@ -86,7 +86,7 @@
     "semantic-release": "25.0.9",
     "ts-node": "10.9.2",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "types": "./dist/index.d.ts",
   "bugs": {
