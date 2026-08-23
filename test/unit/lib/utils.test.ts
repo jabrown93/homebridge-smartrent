@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { findStateByName, redactSensitive } from '../../../src/lib/utils.js';
+import {
+  decodeJwtPayload,
+  findStateByName,
+  redactSensitive,
+} from '../../../src/lib/utils.js';
 
 describe('findStateByName', () => {
   it('returns the state of the matching attribute', () => {
@@ -56,5 +60,51 @@ describe('redactSensitive', () => {
     expect(redactSensitive(42)).toBe(42);
     expect(redactSensitive(null)).toBeNull();
     expect(redactSensitive(undefined)).toBeUndefined();
+  });
+});
+
+describe('decodeJwtPayload', () => {
+  const encode = (value: unknown) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
+  const jwt = (claims: unknown) =>
+    [encode({ alg: 'HS256', typ: 'JWT' }), encode(claims), 'signature'].join(
+      '.'
+    );
+
+  it('extracts the claims SmartRent sessions depend on', () => {
+    const payload = decodeJwtPayload(
+      jwt({ exp: 1_700_000_060, sub: 'User:7' })
+    );
+    expect(payload.exp).toBe(1_700_000_060);
+    expect(payload.sub).toBe('User:7');
+  });
+
+  it('decodes base64url payloads containing - and _', () => {
+    const payload = decodeJwtPayload(jwt({ sub: 'User:7', note: 'a~b?c>>d' }));
+    expect(payload.note).toBe('a~b?c>>d');
+  });
+
+  it('rejects a token that is not three segments', () => {
+    expect(() => decodeJwtPayload('header.payload')).toThrow(/three/);
+  });
+
+  it('rejects a token with an empty payload segment', () => {
+    expect(() => decodeJwtPayload('header..signature')).toThrow(/three/);
+  });
+
+  it('rejects a payload that is not valid JSON', () => {
+    const bad = [
+      'header',
+      Buffer.from('not json').toString('base64url'),
+      'sig',
+    ];
+    expect(() => decodeJwtPayload(bad.join('.'))).toThrow(/not valid JSON/);
+  });
+
+  it('rejects a payload that is JSON but not an object', () => {
+    expect(() => decodeJwtPayload(jwt('a string'))).toThrow(
+      /not a JSON object/
+    );
+    expect(() => decodeJwtPayload(jwt([1, 2]))).toThrow(/not a JSON object/);
   });
 });

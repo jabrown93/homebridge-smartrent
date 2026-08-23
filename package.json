@@ -63,7 +63,6 @@
     "@homebridge/plugin-ui-utils": "^2.0.0",
     "axios": "^1.7.9",
     "homebridge-lib": "^8.0.0",
-    "jwt-decode": "^4.0.0",
     "otplib": "^13.0.0",
     "ws": "^8.8.1"
   },

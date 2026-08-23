@@ -25,13 +25,21 @@ vi.mock('fs', () => ({
   },
 }));
 
-vi.mock('jwt-decode', () => ({ jwtDecode: vi.fn() }));
 vi.mock('otplib', () => ({ generateSync: vi.fn() }));
 
 import { existsSync, promises as fsPromises } from 'fs';
-import { jwtDecode } from 'jwt-decode';
 import { generateSync } from 'otplib';
 import { SmartRentAuthClient } from '../../../src/lib/auth.js';
+
+/** Builds a real unsigned JWT so the tests exercise decodeJwtPayload rather than a mock. */
+const makeJwt = (claims: Record<string, unknown>) =>
+  [
+    Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString(
+      'base64url'
+    ),
+    Buffer.from(JSON.stringify(claims)).toString('base64url'),
+    'signature',
+  ].join('.');
 
 const log = {
   debug: vi.fn(),
@@ -87,19 +95,15 @@ describe('SmartRentAuthClient', () => {
     vi.mocked(fsPromises.chmod).mockResolvedValue(undefined);
     vi.mocked(fsPromises.writeFile).mockResolvedValue(undefined);
     mockAxiosInstance.post.mockResolvedValue({
-      data: { access_token: 'new-jwt' },
+      data: { access_token: makeJwt({ exp: 1_700_000_060, sub: 'User:7' }) },
     });
-    vi.mocked(jwtDecode).mockReturnValue({
-      exp: 1_700_000_060,
-      sub: 'User:7',
-    } as never);
 
     const token = await authClient.getAccessToken({
       email: 'user@example.com',
       password: 'pw',
     });
 
-    expect(token).toBe('new-jwt');
+    expect(token).toBe(makeJwt({ exp: 1_700_000_060, sub: 'User:7' }));
     expect(mockAxiosInstance.post).toHaveBeenCalledWith(
       '/authentication/sessions',
       { email: 'user@example.com', password: 'pw' },
@@ -110,12 +114,8 @@ describe('SmartRentAuthClient', () => {
   it('derives userId from the JWT sub claim and expires 60s before exp', async () => {
     freshSessionDefaults();
     mockAxiosInstance.post.mockResolvedValue({
-      data: { access_token: 'jwt' },
+      data: { access_token: makeJwt({ exp: 1_700_000_060, sub: 'User:123' }) },
     });
-    vi.mocked(jwtDecode).mockReturnValue({
-      exp: 1_700_000_060,
-      sub: 'User:123',
-    } as never);
 
     await authClient.getAccessToken({ email: 'a@b.com', password: 'pw' });
 
@@ -129,12 +129,10 @@ describe('SmartRentAuthClient', () => {
     freshSessionDefaults();
     mockAxiosInstance.post
       .mockResolvedValueOnce({ data: { tfa_api_token: 'tfa-abc' } })
-      .mockResolvedValueOnce({ data: { access_token: 'jwt-after-tfa' } });
+      .mockResolvedValueOnce({
+        data: { access_token: makeJwt({ exp: 1_700_000_060, sub: 'User:9' }) },
+      });
     vi.mocked(generateSync).mockReturnValue('654321');
-    vi.mocked(jwtDecode).mockReturnValue({
-      exp: 1_700_000_060,
-      sub: 'User:9',
-    } as never);
 
     const token = await authClient.getAccessToken({
       email: 'a@b.com',
@@ -142,7 +140,7 @@ describe('SmartRentAuthClient', () => {
       tfaSecret: 'SECRET',
     });
 
-    expect(token).toBe('jwt-after-tfa');
+    expect(token).toBe(makeJwt({ exp: 1_700_000_060, sub: 'User:9' }));
     expect(generateSync).toHaveBeenCalledWith({ secret: 'SECRET' });
     expect(mockAxiosInstance.post).toHaveBeenNthCalledWith(
       2,
@@ -177,12 +175,8 @@ describe('SmartRentAuthClient', () => {
     vi.mocked(fsPromises.writeFile).mockResolvedValue(undefined);
     vi.mocked(fsPromises.chmod).mockResolvedValue(undefined);
     mockAxiosInstance.post.mockResolvedValue({
-      data: { access_token: 'fresh-jwt' },
+      data: { access_token: makeJwt({ exp: 1_700_000_060, sub: 'User:5' }) },
     });
-    vi.mocked(jwtDecode).mockReturnValue({
-      exp: 1_700_000_060,
-      sub: 'User:1',
-    } as never);
 
     const token = await authClient.getAccessToken({
       email: 'a@b.com',
@@ -190,18 +184,14 @@ describe('SmartRentAuthClient', () => {
     });
 
     expect(fsPromises.rm).toHaveBeenCalled();
-    expect(token).toBe('fresh-jwt');
+    expect(token).toBe(makeJwt({ exp: 1_700_000_060, sub: 'User:5' }));
   });
 
   it('persists the session file with owner-only permissions', async () => {
     freshSessionDefaults();
     mockAxiosInstance.post.mockResolvedValue({
-      data: { access_token: 'jwt' },
+      data: { access_token: makeJwt({ exp: 1_700_000_060, sub: 'User:123' }) },
     });
-    vi.mocked(jwtDecode).mockReturnValue({
-      exp: 1_700_000_060,
-      sub: 'User:1',
-    } as never);
 
     await authClient.getAccessToken({ email: 'a@b.com', password: 'pw' });
 
