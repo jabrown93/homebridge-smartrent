@@ -93,8 +93,8 @@ export class SwitchAccessory {
         this.state.hubId,
         this.state.deviceId
       );
-    const on = findStateByName(switchAttributes, 'on') as boolean;
-    const currentValue = on ? 1 : 0;
+    const on = findStateByName(switchAttributes, 'on') as string;
+    const currentValue = on === 'true' ? 1 : 0;
     this.state.on.current = currentValue;
     return currentValue;
   }
@@ -112,7 +112,7 @@ export class SwitchAccessory {
         this.state.deviceId,
         newAttributes
       );
-    const on = findStateByName(switchAttributes, 'on') as boolean;
-    this.state.on.current = on ? 1 : 0;
+    const on = findStateByName(switchAttributes, 'on') as string;
+    this.state.on.current = on === 'true' ? 1 : 0;
   }
 }

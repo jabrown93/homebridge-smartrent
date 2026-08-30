@@ -14,6 +14,7 @@ import { SmartRentAuthClient } from './auth.js';
 import { SmartRentPlatform } from '../platform.js';
 import WebSocket from 'ws';
 import { Logger } from 'homebridge';
+import { randomInt } from 'node:crypto';
 import { redactSensitive } from './utils.js';
 
 export type WSDeviceList = `devices:${string}`;
@@ -62,6 +63,9 @@ export class SmartRentApiClient {
     const apiClient = axios.create({
       baseURL: API_URL,
       headers: API_CLIENT_HEADERS,
+      // Bound every request so a hung or slow response can't block the
+      // per-lock write queue or postpone auto-relock past this window.
+      timeout: 30_000,
     });
     apiClient.interceptors.request.use(this._handleRequest.bind(this));
     apiClient.interceptors.response.use(this._handleResponse.bind(this));
@@ -156,6 +160,16 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
   public wsClient: Promise<WebSocket>;
   public event: object;
   private readonly devices: number[];
+  private reconnectAttempts = 0;
+  private stableTimer?: NodeJS.Timeout;
+
+  private static readonly MAX_RECONNECT_DELAY_MS = 30000;
+  /**
+   * A connection must stay open this long before the backoff is allowed to
+   * reset. Matches the backoff ceiling so a flapping endpoint can never
+   * reconnect faster than the ceiling allows.
+   */
+  private static readonly CONNECTION_STABLE_MS = 30000;
 
   constructor(readonly platform: SmartRentPlatform) {
     super(platform);
@@ -212,34 +226,62 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
 
   private _handleWsOpen() {
     this.log.debug('WebSocket connection opened');
+    // A completed handshake alone doesn't mean the connection is usable — the
+    // server may accept it and close immediately (e.g. rejecting the token).
+    // Resetting the backoff here would make every such retry wait the initial
+    // ~1s, so only reset once the connection has actually stayed open.
+    clearTimeout(this.stableTimer);
+    this.stableTimer = setTimeout(() => {
+      this.log.debug(
+        'WebSocket connection stable, resetting reconnect backoff'
+      );
+      this.reconnectAttempts = 0;
+    }, SmartRentWebsocketClient.CONNECTION_STABLE_MS);
     this.devices.forEach(device => this.subscribeDevice(device));
   }
 
   private _handleWsMessage(message: WebSocket.MessageEvent) {
-    this.log.debug(`WebSocket message received: Data: ${message.data}`);
-    const data: WSPayload = JSON.parse(String(message.data));
-    if (data[3].includes('attribute_state')) {
-      const device = data[2].split(':')[1];
-      this.log.debug(String(data[4]));
-      this.event[device](data[4]);
+    try {
+      this.log.debug(`WebSocket message received: Data: ${message.data}`);
+      const data: WSPayload = JSON.parse(String(message.data));
+      if (
+        Array.isArray(data) &&
+        typeof data[3] === 'string' &&
+        data[3].includes('attribute_state')
+      ) {
+        const device = String(data[2]).split(':')[1];
+        const handler = this.event[device];
+        if (typeof handler === 'function') {
+          this.log.debug(String(data[4]));
+          handler(data[4]);
+        }
+      }
+    } catch (err) {
+      this.log.debug('Ignoring malformed WebSocket frame', err);
     }
   }
 
   private _handleWsError(error: WebSocket.ErrorEvent) {
     this.log.error(`WebSocket error: ${error.message}`);
-    this.wsClient
-      .then(client => client.close())
-      .then(() => this._initializeWsClient);
+    // Closing here triggers the 'close' event, which _handleWsClose uses to
+    // reconnect (with backoff) — don't reconnect a second time here too.
+    this.wsClient.then(client => client.close());
   }
 
   private _handleWsClose(event: WebSocket.CloseEvent) {
     this.log.debug(
-      `WebSocket connection closed: Code: ${event.code}, Reason: ${
-        event.reason
-      }, Event: ${event}`,
-      event
+      `WebSocket connection closed: Code: ${event.code}, Reason: ${event.reason}`
     );
-    this.wsClient = this._initializeWsClient();
+    clearTimeout(this.stableTimer);
+    const delay =
+      Math.min(
+        SmartRentWebsocketClient.MAX_RECONNECT_DELAY_MS,
+        1000 * 2 ** this.reconnectAttempts
+      ) + randomInt(0, 1000);
+    this.reconnectAttempts++;
+    setTimeout(() => {
+      this.wsClient = this._initializeWsClient();
+    }, delay);
   }
 
   /**

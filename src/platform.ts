@@ -34,6 +34,12 @@ export class SmartRentPlatform implements DynamicPlatformPlugin {
     public readonly config: SmartRentPlatformConfig,
     public readonly api: API
   ) {
+    if (this.api.serverVersion.startsWith('1.')) {
+      log.warn(
+        'This plugin will drop support for Homebridge 1.x in a future release. Please upgrade to Homebridge 2.x.'
+      );
+    }
+
     log.debug(`Initializing ${this.config.platform} platform`);
     this.smartRentApi = new SmartRentApi(this);
     log.debug('Finished initializing platform:', this.config.platform);

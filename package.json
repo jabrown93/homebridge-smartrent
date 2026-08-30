@@ -1,7 +1,7 @@
 {
   "displayName": "SmartRent",
   "name": "@jabrown93/homebridge-smartrent",
-  "version": "2.2.3",
+  "version": "2.4.1",
   "description": "Homebridge plugin for SmartRent installations",
   "keywords": [
     "homebridge",
@@ -11,12 +11,17 @@
     "smartrent"
   ],
   "license": "GPL-3.0-or-later",
-  "author": "Jared Brown",
+  "author": {
+    "name": "Jared Brown",
+    "email": "npm@jaredbrown.io",
+    "url": "https://github.com/jabrown93"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jabrown93/homebridge-smartrent.git"
   },
   "type": "module",
+  "prettier": "@jabrown93/dev-config/prettier",
   "publishConfig": {
     "access": "public"
   },
@@ -42,53 +47,45 @@
     "compile": "tsc",
     "build": "npm-run-all clean compile",
     "watch": "npm run dev-setup && npm run build && npm link && nodemon",
-    "prepublishOnly": "npm-run-all prettier lint build",
     "semantic-release": "cross-env semantic-release --no-ci",
     "release": "npm-run-all build semantic-release",
-    "test": "echo \"Error: no test specified\" && exit 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepare": "husky",
     "tsc": "tsc --noEmit",
     "dev-setup": "npm run setup-config && npm run setup-log",
     "setup-config": "if [ ! -f ./test/hbConfig/config.json ]; then cp ./test/hbConfig/config-template.json ./test/hbConfig/config.json; fi",
-    "setup-log": "touch $(pwd)/test/hbConfig/homebridge.log && sed -i '' \"s|<log_file>|$(pwd)/test/hbConfig/homebridge.log|g\" $(pwd)/test/hbConfig/config.json"
+    "setup-log": "touch $(pwd)/test/hbConfig/homebridge.log && sed -i '' \"s|<log_file>|$(pwd)/test/hbConfig/homebridge.log|g\" $(pwd)/test/hbConfig/config.json",
+    "prepack": "npm-run-all clean compile"
   },
   "dependencies": {
     "@homebridge/plugin-ui-utils": "^2.0.0",
     "axios": "^1.7.9",
     "homebridge-lib": "^8.0.0",
-    "jwt-decode": "^4.0.0",
     "otplib": "^13.0.0",
     "ws": "^8.8.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.2.1",
-    "@commitlint/config-conventional": "21.2.0",
-    "@eslint/eslintrc": "3.3.6",
-    "@eslint/js": "10.0.1",
-    "@semantic-release/changelog": "6.0.3",
-    "@semantic-release/commit-analyzer": "13.0.1",
-    "@semantic-release/git": "10.0.1",
-    "@semantic-release/github": "12.0.9",
-    "@semantic-release/npm": "13.1.5",
-    "@semantic-release/release-notes-generator": "14.1.1",
+    "@commitlint/cli": "21.2.2",
+    "@jabrown93/dev-config": "1.2.1",
     "@types/node": "24.13.3",
     "@types/ws": "8.18.1",
-    "@typescript-eslint/eslint-plugin": "8.64.0",
-    "@typescript-eslint/parser": "8.64.0",
-    "conventional-changelog-conventionalcommits": "10.2.1",
+    "@vitest/coverage-v8": "4.1.11",
     "cross-env": "10.1.0",
-    "eslint": "10.7.0",
-    "homebridge": "2.1.1",
-    "homebridge-config-ui-x": "5.24.0",
+    "eslint": "10.9.1",
+    "homebridge": "2.4.0",
+    "homebridge-config-ui-x": "5.28.0",
     "husky": "9.1.7",
-    "lint-staged": "17.0.8",
+    "lint-staged": "17.4.1",
     "nodemon": "3.1.14",
-    "npm-run-all2": "9.0.2",
-    "prettier": "3.9.5",
+    "npm-run-all2": "9.0.3",
+    "prettier": "3.9.6",
     "rimraf": "6.1.3",
-    "semantic-release": "25.0.7",
+    "semantic-release": "25.0.9",
     "ts-node": "10.9.2",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "4.1.11"
   },
   "types": "./dist/index.d.ts",
   "bugs": {

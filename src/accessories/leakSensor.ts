@@ -73,10 +73,11 @@ export class LeakSensorAccessory {
       this.state.hubId,
       this.state.deviceId
     );
-    const leak = findStateByName(leakAttributes, 'leak') as boolean;
-    const currentValue = leak
-      ? this.platform.api.hap.Characteristic.LeakDetected.LEAK_DETECTED
-      : this.platform.api.hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
+    const leak = findStateByName(leakAttributes, 'leak') as string;
+    const currentValue =
+      leak === 'true'
+        ? this.platform.api.hap.Characteristic.LeakDetected.LEAK_DETECTED
+        : this.platform.api.hap.Characteristic.LeakDetected.LEAK_NOT_DETECTED;
     this.state.leak.current = currentValue;
     return currentValue;
   }

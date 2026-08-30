@@ -490,7 +490,7 @@ export class ThermostatAccessory {
         ? this.toCurrentHeatingCoolingStateFromOperatingState(operatingState)
         : this.toCurrentHeatingCoolingStateCharacteristic(
             findStateByName(thermostatAttributes, 'mode') as ThermostatMode
-        );
+          );
     this.state.heating_cooling_state.current = currentValue;
     return currentValue;
   }

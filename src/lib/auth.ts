@@ -15,9 +15,8 @@ import {
   WEBSOCKET_TOKEN_PATH,
   AUTH_CLIENT_HEADERS,
 } from './request.js';
-import { jwtDecode } from 'jwt-decode';
 import { generateSync } from 'otplib';
-import { redactSensitive } from './utils.js';
+import { decodeJwtPayload, redactSensitive } from './utils.js';
 
 const USER_PREFIX = 'User:';
 /** Credentials stored in config.json */
@@ -201,7 +200,7 @@ export class SmartRentAuthClient {
    * @returns formatted session data
    */
   private async _storeSession(data: OAuthSessionData, refreshed = false) {
-    const jwtData = jwtDecode(data.access_token);
+    const jwtData = decodeJwtPayload(data.access_token);
     const exp = jwtData.exp as number;
     const uidString = (jwtData.sub as string).replace(USER_PREFIX, '');
     const uid = parseInt(uidString, 10);
@@ -218,7 +217,7 @@ export class SmartRentAuthClient {
   }
 
   private async _storeWebSocketToken(data: string) {
-    const jwtData = jwtDecode(data);
+    const jwtData = decodeJwtPayload(data);
     const exp = jwtData.exp as number;
     this.session = {
       ...this.session,
@@ -379,7 +378,10 @@ export class SmartRentAuthClient {
         this.log.error(`Failed to ${action}`);
       }
     } else {
-      this.log.error(`Unknown error while attempting to ${action}`, error);
+      const detail = axiosError.code
+        ? `${axiosError.code}: ${axiosError.message}`
+        : axiosError.message;
+      this.log.error(`Unknown error while attempting to ${action}: ${detail}`);
     }
   }
 

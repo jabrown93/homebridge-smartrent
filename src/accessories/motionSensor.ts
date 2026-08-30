@@ -72,7 +72,8 @@ export class MotionSensorAccessory {
       this.state.hubId,
       this.state.deviceId
     );
-    const motion = Boolean(findStateByName(motionAttributes, 'motion_binary'));
+    const motion =
+      findStateByName(motionAttributes, 'motion_binary') === 'true';
     this.state.motion.current = motion;
     return motion;
   }

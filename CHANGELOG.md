@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.4.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.4.0...v2.4.1) (2026-08-10)
+
+## [2.4.0](https://github.com/jabrown93/homebridge-smartrent/compare/v2.3.1...v2.4.0) (2026-07-18)
+
+### Features
+
+* **engines:** standardize Node engines, CI triggers, and deprecate Homebridge 1.x ([#313](https://github.com/jabrown93/homebridge-smartrent/issues/313)) ([d750301](https://github.com/jabrown93/homebridge-smartrent/commit/d7503016f1256cbdd977a1b39fba715fedb365a6))
+
+## [2.3.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.3.0...v2.3.1) (2026-07-18)
+
+### Bug Fixes
+
+* **package:** normalize author, eslint ignores, and test naming ([#317](https://github.com/jabrown93/homebridge-smartrent/issues/317)) ([c4f7b46](https://github.com/jabrown93/homebridge-smartrent/commit/c4f7b46d95b612bcc8906b9c258224ea588311ba))
+
+## [2.3.0](https://github.com/jabrown93/homebridge-smartrent/compare/v2.2.3...v2.3.0) (2026-07-17)
+
+### Features
+
+* add motion sensor support and fix dimmer/thermostat state bugs ([#305](https://github.com/jabrown93/homebridge-smartrent/issues/305)) ([2bf3937](https://github.com/jabrown93/homebridge-smartrent/commit/2bf393726c94cf72957b781b65946a9e336b92a5)), closes [bhavishyachandra/homebridge-smartrent#83](https://github.com/bhavishyachandra/homebridge-smartrent/issues/83)
+* **engines:** support Node 22 LTS alongside Node 24 ([#276](https://github.com/jabrown93/homebridge-smartrent/issues/276)) ([5ed37bf](https://github.com/jabrown93/homebridge-smartrent/commit/5ed37bfa56852346a4e26bd3134f7405db28d23f))
+* **ci:** upload CycloneDX SBOM to Dependency-Track ([#274](https://github.com/jabrown93/homebridge-smartrent/issues/274)) ([aba90ec](https://github.com/jabrown93/homebridge-smartrent/commit/aba90eca94ce44c8563055f0fcc363433fcbd267))
+
+### Bug Fixes
+
+* **release:** build in prepack instead of gating publish on checks ([#309](https://github.com/jabrown93/homebridge-smartrent/issues/309)) ([0b256f5](https://github.com/jabrown93/homebridge-smartrent/commit/0b256f5b8c51f5afc5cf29253f841b62adaa74c7)), closes [jabrown93/.github#24](https://github.com/jabrown93/.github/issues/24)
+* **dt-sbom:** read DT CI key from renamed OpenBao path ([#285](https://github.com/jabrown93/homebridge-smartrent/issues/285)) ([802af5a](https://github.com/jabrown93/homebridge-smartrent/commit/802af5ad8c6662e6bb0aeb1fd0dbc475cf1b991f))
+* resolve 6 findings from security audit (credential leak, crash bugs, state bugs) ([#307](https://github.com/jabrown93/homebridge-smartrent/issues/307)) ([4a4420e](https://github.com/jabrown93/homebridge-smartrent/commit/4a4420ed6b30871df68736e75e56631e05ab3f33))
+* **release:** restore changelog bodies by pinning conventionalcommits to v9 ([#308](https://github.com/jabrown93/homebridge-smartrent/issues/308)) ([3a28b8d](https://github.com/jabrown93/homebridge-smartrent/commit/3a28b8d26fd57e0339a2f00df8b9999c02ae8d68))
+* **security:** stop logging credentials/tokens, lock down session file ([#304](https://github.com/jabrown93/homebridge-smartrent/issues/304)) ([45b620a](https://github.com/jabrown93/homebridge-smartrent/commit/45b620aa4dc3d1a4e10233ba39223171e134cafe))
+
 ## [2.2.3](https://github.com/jabrown93/homebridge-smartrent/compare/v2.2.2...v2.2.3) (2026-05-25)
 
 ### Bug Fixes
