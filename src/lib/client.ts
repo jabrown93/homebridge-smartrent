@@ -211,7 +211,7 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
    */
   private async _initializeWsClient() {
     this.log.debug('WebSocket connection opening');
-    const token = String(await this.getAccessToken());
+    const token = String(await this.getWebSocketToken());
     const wsClient = new WebSocket(
       WS_API_URL +
         '?' +

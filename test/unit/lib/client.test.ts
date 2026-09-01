@@ -69,6 +69,14 @@ describe('SmartRentWebsocketClient', () => {
     vi.clearAllMocks();
   });
 
+  it('uses only the dedicated WebSocket token in the connection URL', async () => {
+    await buildWebsocketClient();
+
+    const url = new URL(createdSockets[0].url);
+    expect(url.searchParams.get('token')).toBe('fake-ws-token');
+    expect(url.href).not.toContain('fake-access-token');
+  });
+
   describe('message dispatch', () => {
     it('dispatches attribute_state frames to the subscribed device handler', async () => {
       const { client } = await buildWebsocketClient();

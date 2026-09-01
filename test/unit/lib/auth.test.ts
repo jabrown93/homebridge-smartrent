@@ -206,6 +206,38 @@ describe('SmartRentAuthClient', () => {
     );
   });
 
+  it('returns a freshly fetched WebSocket token', async () => {
+    const webSocketToken = makeJwt({ exp: 1_700_000_060 });
+    vi.mocked(existsSync).mockReturnValue(true);
+    vi.mocked(fsPromises.readFile).mockResolvedValue(
+      JSON.stringify({
+        accessToken: 'stored-access-token',
+        expires: new Date(Date.now() + 60_000).toISOString(),
+      })
+    );
+    vi.mocked(fsPromises.writeFile).mockResolvedValue(undefined);
+    vi.mocked(fsPromises.chmod).mockResolvedValue(undefined);
+    mockAxiosInstance.post.mockResolvedValue({
+      data: { token: webSocketToken },
+    });
+
+    const token = await authClient.getWebSocketToken({
+      email: 'a@b.com',
+      password: 'pw',
+    });
+
+    expect(token).toBe(webSocketToken);
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+      '/api/v1/authentication/websocket-token',
+      undefined,
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer stored-access-token',
+        }),
+      })
+    );
+  });
+
   it('logs and returns undefined when email and password are both missing', async () => {
     freshSessionDefaults();
 
