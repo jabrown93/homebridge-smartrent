@@ -209,19 +209,26 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
    * Initialize WebSocket client for SmartRent API
    * @returns WebSocket client
    */
-  private async _initializeWsClient() {
-    this.log.debug('WebSocket connection opening');
-    const token = String(await this.getAccessToken());
-    const wsClient = new WebSocket(
-      WS_API_URL +
-        '?' +
-        new URLSearchParams({ token, vsn: WS_VERSION }).toString()
-    );
-    wsClient.onopen = this._handleWsOpen.bind(this);
-    wsClient.onmessage = this._handleWsMessage.bind(this);
-    wsClient.onerror = this._handleWsError.bind(this);
-    wsClient.onclose = this._handleWsClose.bind(this);
-    return wsClient;
+  private async _initializeWsClient(): Promise<WebSocket> {
+    while (true) {
+      this.log.debug('WebSocket connection opening');
+      try {
+        const token = String(await this.getWebSocketToken());
+        const wsClient = new WebSocket(
+          WS_API_URL +
+            '?' +
+            new URLSearchParams({ token, vsn: WS_VERSION }).toString()
+        );
+        wsClient.onopen = this._handleWsOpen.bind(this);
+        wsClient.onmessage = this._handleWsMessage.bind(this);
+        wsClient.onerror = this._handleWsError.bind(this);
+        wsClient.onclose = this._handleWsClose.bind(this);
+        return wsClient;
+      } catch (err) {
+        this.log.error(`WebSocket connection failed: ${String(err)}`);
+        await this._waitForReconnect();
+      }
+    }
   }
 
   private _handleWsOpen() {
@@ -268,20 +275,23 @@ export class SmartRentWebsocketClient extends SmartRentApiClient {
     this.wsClient.then(client => client.close());
   }
 
-  private _handleWsClose(event: WebSocket.CloseEvent) {
-    this.log.debug(
-      `WebSocket connection closed: Code: ${event.code}, Reason: ${event.reason}`
-    );
-    clearTimeout(this.stableTimer);
+  private _waitForReconnect() {
     const delay =
       Math.min(
         SmartRentWebsocketClient.MAX_RECONNECT_DELAY_MS,
         1000 * 2 ** this.reconnectAttempts
       ) + randomInt(0, 1000);
     this.reconnectAttempts++;
-    setTimeout(() => {
-      this.wsClient = this._initializeWsClient();
-    }, delay);
+    return new Promise<void>(resolve => setTimeout(resolve, delay));
+  }
+
+  private async _handleWsClose(event: WebSocket.CloseEvent) {
+    this.log.debug(
+      `WebSocket connection closed: Code: ${event.code}, Reason: ${event.reason}`
+    );
+    clearTimeout(this.stableTimer);
+    await this._waitForReconnect();
+    this.wsClient = this._initializeWsClient();
   }
 
   /**

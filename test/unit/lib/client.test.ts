@@ -27,6 +27,10 @@ const { MockWebSocket, createdSockets } = vi.hoisted(() => {
   return { MockWebSocket: MockWebSocketClass, createdSockets };
 });
 
+const { mockGetWebSocketToken } = vi.hoisted(() => ({
+  mockGetWebSocketToken: vi.fn().mockResolvedValue('fake-ws-token'),
+}));
+
 vi.mock('ws', () => ({ default: MockWebSocket }));
 vi.mock('node:crypto', () => ({ randomInt: vi.fn(() => 0) }));
 
@@ -48,7 +52,7 @@ vi.mock('../../../src/lib/auth.js', () => ({
   SmartRentAuthClient: vi.fn().mockImplementation(function () {
     return {
       getAccessToken: vi.fn().mockResolvedValue('fake-access-token'),
-      getWebSocketToken: vi.fn().mockResolvedValue('fake-ws-token'),
+      getWebSocketToken: mockGetWebSocketToken,
     };
   }),
 }));
@@ -67,6 +71,32 @@ describe('SmartRentWebsocketClient', () => {
   beforeEach(() => {
     createdSockets.length = 0;
     vi.clearAllMocks();
+    mockGetWebSocketToken.mockReset().mockResolvedValue('fake-ws-token');
+  });
+
+  it('uses only the dedicated WebSocket token in the connection URL', async () => {
+    await buildWebsocketClient();
+
+    const url = new URL(createdSockets[0].url);
+    expect(url.searchParams.get('token')).toBe('fake-ws-token');
+    expect(url.href).not.toContain('fake-access-token');
+  });
+
+  it('retries when fetching the WebSocket token fails', async () => {
+    vi.useFakeTimers();
+    mockGetWebSocketToken.mockRejectedValueOnce(new Error('temporary failure'));
+    const platform = createMockPlatform();
+    const client = new SmartRentWebsocketClient(platform);
+
+    try {
+      await vi.advanceTimersByTimeAsync(999);
+      expect(createdSockets).toHaveLength(0);
+      await vi.advanceTimersByTimeAsync(1);
+      await expect(client.wsClient).resolves.toBe(createdSockets[0]);
+      expect(mockGetWebSocketToken).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   describe('message dispatch', () => {

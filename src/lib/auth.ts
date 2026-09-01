@@ -448,10 +448,6 @@ export class SmartRentAuthClient {
     ) {
       return session.webSocketToken;
     }
-    await this._getWebsocketToken(session);
-    if (session && 'webSocketToken' in session) {
-      return session.webSocketToken;
-    }
-    this.log.error('Failed to authenticate with SmartRent');
+    return this._getWebsocketToken(session);
   }
 }
