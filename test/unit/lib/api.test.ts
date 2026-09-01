@@ -84,25 +84,25 @@ describe('SmartRentApi.discoverDevices', () => {
     expect(client.get).toHaveBeenCalledWith('/hubs/1/devices');
   });
 
-  it('logs and returns [] when the configured unit is not found', async () => {
+  it('logs and returns undefined when the configured unit is not found', async () => {
     const { api, client, platform } = buildApi({ unitName: 'Missing Unit' });
     client.get.mockResolvedValue(unitRecords([unit()]));
 
     const devices = await api.discoverDevices();
 
-    expect(devices).toEqual([]);
+    expect(devices).toBeUndefined();
     expect(platform.log.error).toHaveBeenCalledWith(
       'Unit Missing Unit not found'
     );
   });
 
-  it('logs and returns [] when the unit has no hub', async () => {
+  it('logs and returns undefined when the unit has no hub', async () => {
     const { api, client, platform } = buildApi();
     client.get.mockResolvedValue(unitRecords([unit({ hub_id: 0 })]));
 
     const devices = await api.discoverDevices();
 
-    expect(devices).toEqual([]);
+    expect(devices).toBeUndefined();
     expect(platform.log.error).toHaveBeenCalledWith('No SmartRent hub found');
   });
 });

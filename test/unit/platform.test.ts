@@ -184,6 +184,22 @@ describe('SmartRentPlatform', () => {
     expect(SwitchAccessory).toHaveBeenCalledTimes(1);
   });
 
+  it('preserves cached accessories when discovery is aborted', async () => {
+    const { platform, api, apiClient } = buildPlatform();
+    const cached = {
+      UUID: 'uuid-cached',
+      context: {} as Record<string, unknown>,
+      displayName: 'Cached Device',
+    };
+    platform.configureAccessory(cached as never);
+
+    apiClient.discoverDevices.mockResolvedValue(undefined);
+
+    await platform.discoverDevices();
+
+    expect(api.unregisterPlatformAccessories).not.toHaveBeenCalled();
+  });
+
   it('unregisters accessories that are no longer present in a fresh discovery', async () => {
     const { platform, api, apiClient } = buildPlatform();
     const stale = {
