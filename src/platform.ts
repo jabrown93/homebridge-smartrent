@@ -154,6 +154,9 @@ export class SmartRentPlatform implements DynamicPlatformPlugin {
    */
   async discoverDevices() {
     const devices = await this.smartRentApi.discoverDevices();
+    if (!devices) {
+      return;
+    }
 
     // loop over the discovered devices and register each one if it has not already been registered
     const uuids = devices.map(device => {

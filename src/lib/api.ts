@@ -88,14 +88,14 @@ export class SmartRentApi {
       : unitRecordsData[0];
     if (!unitData) {
       this.platform.log.error(`Unit ${unitName} not found`);
-      return [];
+      return;
     }
 
     // Get the unit's hub
     const hubId = unitData.hub_id;
     if (!hubId) {
       this.platform.log.error('No SmartRent hub found');
-      return [];
+      return;
     }
 
     // Get the devices in the hub
