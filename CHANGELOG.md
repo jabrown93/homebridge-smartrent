@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.4.2-beta.2](https://github.com/jabrown93/homebridge-smartrent/compare/v2.4.2-beta.1...v2.4.2-beta.2) (2026-09-01)
+
+### Bug Fixes
+
+* **auth:** use websocket token for connections ([#335](https://github.com/jabrown93/homebridge-smartrent/issues/335)) ([d65c24c](https://github.com/jabrown93/homebridge-smartrent/commit/d65c24ce35268e87e9f34b4e37709c98d079e5a2))
+
 ## [2.4.2-beta.1](https://github.com/jabrown93/homebridge-smartrent/compare/v2.4.1...v2.4.2-beta.1) (2026-09-01)
 
 ### Bug Fixes
