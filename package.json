@@ -67,7 +67,7 @@
     "ws": "^8.8.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.2.3",
+    "@commitlint/cli": "21.2.4",
     "@jabrown93/dev-config": "1.2.7",
     "@types/node": "24.19.2",
     "@types/ws": "8.18.2",
